@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>By Ocompos — Audio Engineer | Mix, Mastering & Sound Design</title>
+  <meta name="description"
+    content="Professional audio engineer specializing in mixing, mastering, and sound design for artists and film." />
+
+  <!-- SEO / Meta tags -->
+  <link rel="canonical" href="https://byocompos.com/" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://byocompos.com/" />
+  <meta property="og:title" content="ByOcompos — Audio Engineer" />
+  <meta property="og:description"
+    content="Professional audio engineer specializing in mixing, mastering, and sound design for artists and film." />
+  <meta property="og:image" content="https://byocompos.com/og-image.jpg" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://byocompos.com/" />
+  <meta name="twitter:title" content="ByOcompos — Audio Engineer" />
+  <meta name="twitter:description"
+    content="Professional audio engineer specializing in mixing, mastering, and sound design for artists and film." />
+  <meta name="twitter:image" content="https://byocompos.com/og-image.jpg" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;600&family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@700;800&family=Playfair+Display:ital,wght@1,500&family=Pinyon+Script&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <a class="skip-link" href="#main">skip to content</a>
+
+  <!-- Animated Background Canvas (kept for other sections) -->
+  <canvas id="starfield"></canvas>
+
+  <!-- Preloader -->
+  <div id="preloader">
+    <div class="loader-circle"></div>
+  </div>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="mobile-nav" id="mobile-nav">
+    <a href="#services">services</a>
+    <a href="#portfolio">portfolio</a>
+    <a href="#sounds">sounds</a>
+    <a href="#before-after">before/after</a>
+    <a href="#trusted">clients</a>
+    <a href="#about">about</a>
+    <a href="#contact">contact</a>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="logo-txt">by<span> Ocompos</span></div>
+    <nav aria-label="main">
+      <a href="#services">Services</a>
+      <a href="#sounds">Playlist</a>
+      <a href="#before-after">Before/After</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <button class="hamburger" type="button" aria-label="menu" aria-expanded="false" aria-controls="mobile-nav">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+    
+  <main id="main">
+    <!-- ========================================== -->
+    <!-- HERO SECTION - 3D Interactive -->
+    <!-- ========================================== -->
+    <section class="hero" id="home">
+      <div class="hero-container" id="hero3d">
+        <!-- Starry background -->
+        <div class="stars"></div>
+
+        <!-- 3D Content -->
+        <div class="hero-content" id="heroContent">
+          <!-- Centered Hero Logo -->
+          <div class="hero-logo-container">
+            <img src="resource/logo-remove" alt="ByOcompos Logo" class="hero-logo" />
+          </div>
+
+          <h1 class="title">
+            Turning Emotion <span class="highlight">Into Sound</span>
+          </h1>
+
+          <p class="subtitle">Recording • Mix • Mastering </p>
+
+          <div>
+            <a href="#sounds" class="btn btn-filled">My Work</a>
+            <a href="#contact" class="btn btn-outline">Session</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services -->
+    <section id="services">
+      <h2 class="section-title reveal">services</h2>
+      <div class="svc-grid">
+        <div class="svc-item reveal">
+          <h3>Recording</h3>
+          <p>Focused studio sessions that capture a clean, confident take the first time.</p>
+        </div>
+        <div class="svc-item reveal">
+          <h3>Mixing</h3>
+          <p>Balance, depth and punch: a mix that translates on every system and is ready for release.</p>
+        </div>
+        <div class="svc-item reveal">
+          <h3>Mastering</h3>
+          <p>Loud, polished and streaming-ready masters for every platform.</p>
+        </div>
+      </div>
+    </section>
+    <!-- ========================================== -->
+    <!-- tOP SONGS BY ME -->
+    <!-- To add a track: copy one <li>, bump the number, point data-audio at the file. -->
+    <!-- ========================================== -->
+    <section id="sounds">
+      <div class="sec-head reveal">
+        <h2 class="section-title">TOP 10  </h2>
+        <p class="sec-desc">Favorite  projects I've recorded, mixed and mastered.</p>
+      </div>
+
+      <div class="player reveal" data-player>
+        <div class="player-main">
+          <button class="player-toggle" type="button" aria-label="play" disabled>
+            <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+            <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
+          </button>
+          <div class="player-info">
+            <p class="now-title">track</p>
+            <p class="now-meta">&nbsp;</p>
+            <div class="seek-row">
+              <time class="t-cur">0:00</time>
+              <input class="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="seek" disabled />
+              <time class="t-dur">0:00</time>
+            </div>
+          </div>
+        </div>
+
+        <ol class="playlist">
+          <li style="--i:1;">
+            <button class="track" type="button" data-audio="resource/audio/track-01.mp3" data-title="Track title 01"
+              data-meta="Mix &amp; Master · Afrobeat" data-year="2025">
+              <span class="track-num">01</span>
+              <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="track-text">
+                <span class="track-title">Track title 01</span>
+                <span class="track-meta">Mix &amp; Master · Afrobeat</span>
+              </span>
+              <span class="track-year">2025</span>
+            </button>
+          </li>
+          <li style="--i:2;">
+            <button class="track" type="button" data-audio="resource/audio/track-02.mp3" data-title="Track title 02"
+              data-meta="Mix · Drill" data-year="2025">
+              <span class="track-num">02</span>
+              <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="track-text">
+                <span class="track-title">Track title 02</span>
+                <span class="track-meta">Mix · Drill</span>
+              </span>
+              <span class="track-year">2025</span>
+            </button>
+          </li>
+          <li style="--i:3;">
+            <button class="track" type="button" data-audio="resource/audio/track-03.mp3" data-title="Track title 03"
+              data-meta="Recording · Rap" data-year="2025">
+              <span class="track-num">03</span>
+              <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="track-text">
+                <span class="track-title">Track title 03</span>
+                <span class="track-meta">Recording · Rap</span>
+              </span>
+              <span class="track-year">2025</span>
+            </button>
+          </li>
+          <li style="--i:4;">
+            <button class="track" type="button" data-audio="resource/audio/track-04.mp3" data-title="Track title 04"
+              data-meta="Mastering · R&amp;B" data-year="2024">
+              <span class="track-num">04</span>
+              <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="track-text">
+                <span class="track-title">Track title 04</span>
+                <span class="track-meta">Mastering · R&amp;B</span>
+              </span>
+              <span class="track-year">2024</span>
+            </button>
+          </li>
+          <li style="--i:5;">
+            <button class="track" type="button" data-audio="resource/audio/track-05.mp3" data-title="Track title 05"
+              data-meta="Mix &amp; Master · Trap" data-year="2024">
+              <span class="track-num">05</span>
+              <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="track-text">
+                <span class="track-title">Track title 05</span>
+                <span class="track-meta">Mix &amp; Master · Trap</span>
+              </span>
+              <span class="track-year">2024</span>
+            </button>
+          </li>
+          <li style="--i:6;">
+            <button class="track" type="button" data-audio="resource/audio/track-06.mp3" data-title="Track title 06"
+              data-meta="Mix · Afrobeat" data-year="2024">
+              <span class="track-num">06</span>
+              <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="track-text">
+                <span class="track-title">Track title 06</span>
+                <span class="track-meta">Mix · Afrobeat</span>
+              </span>
+              <span class="track-year">2024</span>
+            </button>
+          </li>
+        </ol>
+        <p class="sr-only" aria-live="polite" data-player-status></p>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- BEFORE / AFTER -->
+    <!-- Each .ab-pair needs a raw file (data-before) and a final file (data-after) of the same length. -->
+    <!-- ========================================== -->
+    <section id="before-after">
+      <div class="sec-head reveal">
+        <!-- <p class="eyebrow">02 / before &amp; after</p> -->
+        <h2 class="section-title">before / after</h2>
+        <p class="sec-desc">Hear the difference: raw recording vs final mix &amp; master.</p>
+      </div>
+
+      <div class="ab reveal" data-ab>
+        <div class="ab-tabs" role="tablist" aria-label="comparison tracks"></div>
+
+        <div class="ab-pair" data-before="resource/audio/before-1.mp3" data-after="resource/audio/after-1.mp3"
+          data-title="Track one"></div>
+        
+
+        <div class="ab-stage">
+          <div class="ab-visual" aria-hidden="true">
+            <span class="ab-label">RAW / ORIGINAL</span>
+            <div class="ab-bars"></div>
+          </div>
+
+          <div class="ab-controls">
+            <button class="player-toggle ab-play" type="button" aria-label="play" disabled>
+              <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+              <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
+            </button>
+            <div class="seek-row">
+              <time class="t-cur">0:00</time>
+              <input class="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="seek" disabled />
+              <time class="t-dur">0:00</time>
+            </div>
+            <div class="ab-toggle" role="group" aria-label="version">
+              <button type="button" class="ab-opt" data-side="raw" aria-pressed="true">A — raw</button>
+              <button type="button" class="ab-opt" data-side="final" aria-pressed="false">B — final</button>
+            </div>
+          </div>
+          <p class="ab-note" data-ab-status>loading…</p>
+        </div>
+      </div>
+    </section>
+    <!-- About -->
+    <section id="about">
+      <div class="about-container reveal">
+        <div class="about-img">
+          <img loading="lazy" decoding="async" src="resource/logo.jpeg" alt="Portrait of Ocompos"
+            onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%\' height=\'100%\'><rect width=\'100%\' height=\'100%\' fill=\'#070a10\'/></svg>'" />
+        </div>
+        <div class="about-content">
+          <h2 class="section-title" style="text-align: left; margin-bottom: 1rem;">qui suis-je ?</h2>
+          <p style="font-weight: 400; line-height: 1.7; color: var(--text-secondary);">
+            I am Ocompos, a sound engineer dedicated to carving unique sonic identities.
+            Between the precision of digital processing and the warmth of emotional resonance,
+            I ensure your project isn't just heard, but felt. From local artists to international
+            labels, every frequency is treated with surgical intent.
+          </p>
+          <!-- Pre-filled mailto -->
+          <a href="mailto:contact@byocompos.com?subject=Inquiry:%20Free%20Quote&body=Hi%20Ocompos,%0A%0AI'm%20interested%20in%20your%20services.%20Here%20are%20the%20details%20of%20my%20project:%0A%0A"
+            class="glass-btn hover-scale">Record with us</a>
+        </div>
+      </div>
+    </section>
+    <!-- ========================================== -->
+    <!-- THEY TRUSTED ME SECTION -->
+    <!-- ========================================== -->
+    <section id="trusted" class="trusted-section">
+      <div class="trusted-header reveal">
+        <h2 class="trusted-title">they trusted <span class="purple-italic">me.</span></h2>
+      </div>
+
+      <div class="carousel-wrapper">
+        <div class="carousel-track">
+          <!-- Client 1: Icelaye -->
+          <div class="client-item">
+            <div class="client-avatar-ring">
+              <img src="" alt="Icelaye" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <!-- Faceted Diamond Flower Emblem for Icelaye -->
+                <svg width="68" height="68" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <polygon points="50,44 55,47 55,53 50,56 45,53 45,47" fill="#ffffff" opacity="0.95" />
+                  <!-- 6 Diamond Facets -->
+                  <g transform="translate(50,50) rotate(0) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                  <g transform="translate(50,50) rotate(60) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                  <g transform="translate(50,50) rotate(120) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                  <g transform="translate(50,50) rotate(180) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                  <g transform="translate(50,50) rotate(240) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                  <g transform="translate(50,50) rotate(300) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">Icelaye</span>
+              <span class="client-role">Bijouterie</span>
+            </div>
+          </div>
+
+          <!-- Client 2: MRKing -->
+          <div class="client-item">
+            <div class="client-avatar-ring">
+              <img src="" alt="MRKing" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">MRKing</span>
+              <span class="client-role">Artiste</span>
+            </div>
+          </div>
+
+          <!-- Client 3: Baloo -->
+          <div class="client-item">
+            <div class="client-avatar-ring">
+              <img src="" alt="Baloo" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">Baloo</span>
+              <span class="client-role">Créateur de contenu</span>
+            </div>
+          </div>
+
+          <!-- Client 4: Maison Nova -->
+          <div class="client-item">
+            <div class="client-avatar-ring">
+              <img src="" alt="Maison Nova" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">Maison Nova</span>
+              <span class="client-role">Bijouterie</span>
+            </div>
+          </div>
+
+          <!-- Client 5: Eldo -->
+          <div class="client-item">
+            <div class="client-avatar-ring">
+              <img src="" alt="Eldo" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">Eldo</span>
+              <span class="client-role">Artiste</span>
+            </div>
+          </div>
+
+          <!-- Client 6: 808 Wave -->
+          <div class="client-item">
+            <div class="client-avatar-ring">
+              <img src="" alt="808 Wave" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">808 Wave</span>
+              <span class="client-role">Label Indépendant</span>
+            </div>
+          </div>
+
+          <!-- ============================================== -->
+          <!-- DUPLICATE SET FOR SEAMLESS INFINITE LOOPING -->
+          <!-- ============================================== -->
+
+          <!-- Client 1 Duplicate: Icelaye -->
+          <div class="client-item" aria-hidden="true">
+            <div class="client-avatar-ring">
+              <img src="" alt="Icelaye" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <svg width="68" height="68" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <polygon points="50,44 55,47 55,53 50,56 45,53 45,47" fill="#ffffff" opacity="0.95" />
+                  <g transform="translate(50,50) rotate(0) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                  <g transform="translate(50,50) rotate(60) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                  <g transform="translate(50,50) rotate(120) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                  <g transform="translate(50,50) rotate(180) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                  <g transform="translate(50,50) rotate(240) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                  <g transform="translate(50,50) rotate(300) translate(-50,-50)">
+                    <polygon points="50,16 57,28 50,40 43,28" fill="#ffffff" opacity="0.9" stroke="#000000"
+                      stroke-width="0.6" />
+                    <polygon points="50,16 54,23 50,30 46,23" fill="#ffffff" />
+                  </g>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">Fettyndos </span>
+              <span class="client-role">Compositeur</span>
+            </div>
+          </div>
+
+          <!-- Client 2 Duplicate: MRKing -->
+          <div class="client-item" aria-hidden="true">
+            <div class="client-avatar-ring">
+              <img src="" alt="MRKing" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">MRKing</span>
+              <span class="client-role">Artiste</span>
+            </div>
+          </div>
+
+          <!-- Client 3 Duplicate: Baloo -->
+          <div class="client-item" aria-hidden="true">
+            <div class="client-avatar-ring">
+              <img src="" alt="Baloo" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">Slim Sandro</span>
+              <span class="client-role">Artist</span>
+            </div>
+          </div>
+
+          <!-- Client 4 bibiboi -->
+          <div class="client-item" aria-hidden="true">
+            <div class="client-avatar-ring">
+              <img src="" alt="Maison Nova" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">BIBIBOI</span>
+              <span class="client-role">Artist</span>
+            </div>
+          </div>
+
+          <!-- Client CARTY -->
+          <div class="client-item" aria-hidden="true">
+            <div class="client-avatar-ring">
+              <img src="" alt="Eldo" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">CARTY</span>
+              <span class="client-role">Artiste</span>
+            </div>
+          </div>
+
+          <!-- trappish -->
+          <div class="client-item" aria-hidden="true">
+            <div class="client-avatar-ring">
+              <img src="" alt="808 Wave" class="client-avatar-img" />
+              <div class="avatar-placeholder-icon">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round" opacity="0.75">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="client-info">
+              <span class="client-name">TRapish</span>
+              <span class="client-role">Label Indépendant</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Contact Form Section -->
+    <section id="contact">
+      <h2 class="section-title reveal">contact</h2>
+      <form class="contact-form reveal"
+        onsubmit="event.preventDefault(); alert('Thank you for your message! ByOcompos will get back to you shortly.'); this.reset();">
+        <label class="field-label" for="contact-name">name</label>
+        <input type="text" id="contact-name" name="name" placeholder="your name or artist name" autocomplete="name" required />
+        <label class="field-label" for="contact-email">email</label>
+        <input type="email" id="contact-email" name="email" placeholder="you@example.com" autocomplete="email" required />
+        <label class="field-label" for="contact-message">message</label>
+        <textarea name="message" id="contact-message" placeholder="tell me about your project" rows="5" required></textarea>
+        <button type="submit" class="glass-btn hover-scale"
+          style="width: 100%; border: none; cursor: pointer; text-align: center;">send message</button>
+      </form>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- LUXURY PURPLE FOOTER BANNER -->
+    <!-- ========================================== -->
+    <footer class="purple-footer reveal">
+      <div class="footer-inner">
+        <a href="mailto:contact@byocompos.com" class="footer-email">contact@byocompos.com</a>
+
+        <div class="footer-socials">
+          <!-- Instagram -->
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg>
+          </a>
+
+          <!-- YouTube -->
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+            </svg>
+          </a>
+
+          <!-- Spotify -->
+          <a href="https://spotify.com" target="_blank" rel="noopener" aria-label="Spotify">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
+            </svg>
+          </a>
+
+          <!-- SoundCloud -->
+          <a href="https://soundcloud.com" target="_blank" rel="noopener" aria-label="SoundCloud">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M1.175 12.225c-.051 0-.094.044-.102.102L.89 13.9c-.006.059.037.102.088.102h.197c.051 0 .095-.043.102-.102l.183-1.573c.007-.058-.036-.102-.088-.102h-.197zm1.37-1.35c-.066 0-.117.051-.124.124l-.248 3.999c-.007.073.044.124.11.124h.262c.066 0 .117-.051.125-.124l.248-3.999c.007-.073-.044-.124-.11-.124h-.263zm1.533-.679c-.073 0-.131.059-.138.139l-.278 5.378c-.007.08.051.139.124.139h.292c.073 0 .131-.059.139-.139l.277-5.378c.007-.08-.051-.139-.124-.139h-.292zm1.569-.307c-.08 0-.146.066-.153.153l-.299 5.992c-.007.088.059.153.139.153h.314c.08 0 .146-.065.153-.153l.299-5.992c.007-.087-.058-.153-.139-.153h-.314zm1.57-.146c-.087 0-.16.073-.168.168l-.306 6.284c-.007.095.066.168.153.168h.329c.087 0 .16-.073.168-.168l.306-6.284c.008-.095-.065-.168-.153-.168h-.329zm1.569-.11c-.095 0-.175.08-.182.182l-.299 6.503c-.007.102.073.182.168.182h.343c.095 0 .175-.08.182-.182l.299-6.503c.008-.102-.073-.182-.167-.182h-.344zm1.57-.044c-.102 0-.189.088-.197.197l-.277 6.591c-.008.109.08.197.182.197h.358c.102 0 .19-.088.197-.197l.277-6.591c.008-.109-.08-.197-.182-.197h-.358zm1.577-.087c-.109 0-.204.095-.212.212l-.248 6.766c-.007.117.088.212.197.212h.372c.11 0 .204-.095.212-.212l.248-6.766c.007-.117-.088-.212-.197-.212h-.372zm4.014-2.883c-.453 0-.89.095-1.292.27-.248.11-.475.248-.686.416-.146.117-.182.292-.124.46.058.16.211.255.379.24.124-.014.248-.036.379-.036 1.489 0 2.7 1.212 2.7 2.7 0 .263-.044.518-.117.759-.058.197.029.408.211.496 1.139.547 1.934 1.708 1.934 3.058 0 1.883-1.533 3.416-3.416 3.416h-3.46c-.124 0-.226.102-.226.226v.438c0 .124.102.226.226.226h3.46c2.372 0 4.306-1.934 4.306-4.306 0-1.635-.919-3.073-2.284-3.795.036-.204.058-.416.058-.628 0-2.029-1.649-3.679-3.679-3.679z" />
+            </svg>
+          </a>
+
+          <!-- X (Twitter) -->
+          <a href="https://x.com" target="_blank" rel="noopener" aria-label="X">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+          </a>
+
+          <!-- TikTok -->
+          <a href="https://tiktok.com" target="_blank" rel="noopener" aria-label="TikTok">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12.525.02c1.31 0 2.6.22 3.8.64v3.91a8.4 8.4 0 0 1-3.8-.9v9.75a6.45 6.45 0 1 1-6.45-6.45c.42 0 .84.04 1.25.13v3.94a2.53 2.53 0 1 0 1.28 2.38V.02h3.92z" />
+            </svg>
+          </a>
+        </div>
+
+        <div class="footer-signature">By ocompos</div>
+        <p class="footer-copy">© 2026 BYOCOMPOS. ALL RIGHTS RESERVED.</p>
+      </div>
+    </footer>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- VIDEO MODAL (YouTube) -->
+  <!-- ========================================== -->
+  <div id="video-modal" class="modal" role="dialog" aria-modal="true" aria-label="video player">
+    <div class="modal-content">
+      <button class="close-modal" type="button" aria-label="close">&times;</button>
+      <iframe src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+
+</body>
+
+</html>
