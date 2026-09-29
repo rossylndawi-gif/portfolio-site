@@ -2,14 +2,23 @@
 // ============================================
 // 1. PRELOADER LOGIC (With Safety Fallback)
 // ============================================
+let resolvePreloader;
+const preloaderFinished = new Promise(res => { resolvePreloader = res; });
+let preloaderHiding = false;
+
 const hidePreloader = () => {
+  if (preloaderHiding) return;
+  preloaderHiding = true;
   const loader = document.getElementById('preloader');
-  if (loader && loader.style.display !== 'none') {
-    loader.style.opacity = '0';
-    setTimeout(() => {
-      loader.style.display = 'none';
-    }, 800);
+  if (!loader) {
+    resolvePreloader();
+    return;
   }
+  loader.style.opacity = '0';
+  setTimeout(() => {
+    loader.style.display = 'none';
+    resolvePreloader();
+  }, 800);
 };
 
 // Hide as soon as the DOM is usable; waiting for every image and font made
@@ -17,6 +26,45 @@ const hidePreloader = () => {
 document.addEventListener('DOMContentLoaded', hidePreloader);
 // Fallback so preloader never blocks the page
 setTimeout(hidePreloader, 800);
+
+// ============================================
+// === LENIS === smooth scrolling, driven by GSAP's ticker
+// ============================================
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const hasGsap = !!(window.gsap && window.ScrollTrigger);
+
+if (!reduceMotion && window.Lenis && hasGsap) {
+  gsap.registerPlugin(ScrollTrigger);
+  const lenis = new Lenis({
+    duration: 1.1,
+    easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smoothWheel: true
+  });
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add(t => lenis.raf(t * 1000));
+  gsap.ticker.lagSmoothing(0);
+  window.__lenis = lenis;
+}
+
+// Shared by nav links, scroll-to-contact CTAs and hash-on-load.
+// Lands the target just below the fixed header.
+function scrollToTarget(target, onDone) {
+  const el = typeof target === 'string' ? document.querySelector(target) : target;
+  if (!el) return;
+  const offset = -(document.querySelector('header')?.offsetHeight || 0) - 20;
+  const y = el.getBoundingClientRect().top + window.scrollY + offset;
+  // Already there: some scrollers skip the callback for a zero-distance scroll.
+  if (Math.abs(y - window.scrollY) < 2) {
+    onDone && onDone();
+    return;
+  }
+  if (window.__lenis) {
+    window.__lenis.scrollTo(el, { offset, onComplete: onDone });
+  } else {
+    window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
+    onDone && setTimeout(onDone, reduceMotion ? 0 : 600);
+  }
+}
 
 // ============================================
 // 2. HEADER SCROLL EFFECT
@@ -51,6 +99,8 @@ const setMobileNav = (open) => {
   hamburger.setAttribute('aria-expanded', String(open));
   hamburger.setAttribute('aria-label', open ? 'close menu' : 'menu');
   document.body.style.overflow = open ? 'hidden' : 'auto';
+  if (open) window.__lenis?.stop();
+  else window.__lenis?.start();
 };
 
 if (hamburger && mobileNav) {
@@ -64,18 +114,176 @@ if (hamburger && mobileNav) {
 }
 
 // ============================================
-// 4. SCROLL REVEAL ANIMATIONS (IntersectionObserver)
+// 4. SCROLL REVEALS
+// GSAP when it loaded; otherwise the IntersectionObserver fallback below.
 // ============================================
-const revealElements = document.querySelectorAll('.reveal');
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('active');
-      revealObserver.unobserve(entry.target);
+if (hasGsap) document.documentElement.classList.add('gsap-ready');
+
+// --- Fallback: no GSAP ---
+if (!hasGsap) {
+  const revealElements = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  revealElements.forEach(el => revealObserver.observe(el));
+}
+
+// ============================================
+// === GSAP MOTION === reveals, title splits, hero pin/fade
+// gsap.matchMedia scopes everything and reverts it when a condition flips.
+// ============================================
+if (hasGsap) {
+  gsap.registerPlugin(ScrollTrigger);
+  if (window.SplitText) gsap.registerPlugin(SplitText);
+
+  const REVEAL_FROM = { opacity: 0, y: 28 };
+  const REVEAL_TO = { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' };
+  const STAGGER_GRIDS = '.svc-grid, .works-grid, .playlist, .carousel-track';
+
+  const mm = gsap.matchMedia();
+  mm.add({
+    desktop: '(min-width: 769px)',
+    mobile: '(max-width: 768px)',
+    motion: '(prefers-reduced-motion: no-preference)'
+  }, (ctx) => {
+    const { desktop, mobile, motion } = ctx.conditions;
+
+    // Reduced motion: everything visible, no triggers, no pin, no splits.
+    if (!motion) {
+      document.querySelectorAll('.reveal').forEach(el => el.classList.add('active'));
+      return;
+    }
+
+    const handled = new Set();
+
+    // --- Staggered grids: one ScrollTrigger per grid ---
+    // Cards hidden by the portfolio filter are left out of the stagger and
+    // marked visible so they appear normally when a filter shows them.
+    document.querySelectorAll('.svc-grid, .works-grid').forEach(grid => {
+      const items = Array.from(grid.children);
+      items.forEach(el => handled.add(el));
+      const shown = items.filter(el => el.offsetParent !== null);
+      items.filter(el => el.offsetParent === null).forEach(el => el.classList.add('active'));
+      if (!shown.length) return;
+      gsap.fromTo(shown, REVEAL_FROM, {
+        ...REVEAL_TO,
+        stagger: 0.08,
+        scrollTrigger: { trigger: grid, start: 'top 82%', once: true }
+      });
+    });
+
+    // --- Sounds player: the panel reveals, then its cards stagger in ---
+    // Cards (.track), not their <li> slots: script.js owns each slot's 3D
+    // transform. (The client carousel is a marquee and is not staggered.)
+    document.querySelectorAll('.player.reveal').forEach(player => {
+      handled.add(player);
+      const rows = player.querySelectorAll('.playlist > li > .track');
+      const tl = gsap.timeline({ scrollTrigger: { trigger: player, start: 'top 82%', once: true } });
+      tl.fromTo(player, REVEAL_FROM, REVEAL_TO);
+      if (rows.length) {
+        tl.fromTo(rows, { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.08 }, 0.2);
+      }
+    });
+
+    // --- Individual reveals ---
+    document.querySelectorAll('.reveal').forEach(el => {
+      if (handled.has(el) || el.parentElement.closest(STAGGER_GRIDS)) return;
+      gsap.fromTo(el, REVEAL_FROM, {
+        ...REVEAL_TO,
+        scrollTrigger: { trigger: el, start: 'top 82%', once: true }
+      });
+    });
+
+    // --- Title word reveals (SplitText keeps nested markup + a11y label) ---
+    if (window.SplitText) {
+      document.querySelectorAll('.section-title, .trusted-title, .portfolio-hero-title').forEach(el => {
+        SplitText.create(el, {
+          type: 'words', mask: 'words', aria: 'auto', autoSplit: true,
+          onSplit: (self) => gsap.from(self.words, {
+            yPercent: 100, opacity: 0, duration: 0.7, ease: 'power3.out', stagger: 0.04,
+            scrollTrigger: { trigger: el, start: 'top 85%', once: true }
+          })
+        });
+      });
+    }
+
+    // --- Hero ---
+    if (document.querySelector('.hero')) {
+      if (desktop) {
+        // Pinned scrub. Targets are wrappers/children — never .hero-content,
+        // which the 3D tilt owns.
+        gsap.timeline({
+          scrollTrigger: { trigger: '.hero', start: 'top top', end: '+=45%', pin: true, scrub: 1 }
+        })
+          .to('.hero-logo-wrap', { scale: 0.85, y: -20, opacity: 0.7 }, 0)
+          .to('.hero-content .title', { y: -30, opacity: 0 }, 0.1)
+          .to('.hero-content .subtitle', { y: -20, opacity: 0 }, 0.15)
+          .to('.hero-actions', { y: -10, opacity: 0 }, 0.2);
+      }
+      if (mobile) {
+        gsap.to('.hero-fade', {
+          opacity: 0, y: -30, ease: 'none',
+          scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom 40%', scrub: true }
+        });
+      }
     }
   });
-}, { threshold: 0.1 });
-revealElements.forEach(el => revealObserver.observe(el));
+}
+
+// === LAYOUT READY === measure once fonts + preloader are done, then honour
+// a hash in the URL (e.g. portfolio.html → index.html#contact).
+Promise.all([preloaderFinished, document.fonts ? document.fonts.ready : null]).then(() => {
+  if (hasGsap) ScrollTrigger.refresh();
+  const id = decodeURIComponent(location.hash.slice(1));
+  const el = id && document.getElementById(id);
+  if (el) scrollToTarget(el);
+});
+
+// ============================================
+// === MOBILE SECTION BLUR === (≤768px) only the section at viewport centre
+// gets the backdrop blur; backdrop-filter everywhere is too heavy on older phones.
+// ============================================
+(() => {
+  if (reduceMotion || !('IntersectionObserver' in window)) return;
+  // On desktop the hero is already wrapped in ScrollTrigger's pin-spacer.
+  const sections = document.querySelectorAll('main > section, main > .pin-spacer > section');
+  if (!sections.length) return;
+  const mq = matchMedia('(max-width: 768px)');
+  let io = null;
+  let current = null;
+
+  const disable = () => {
+    if (io) io.disconnect();
+    io = null;
+    if (current) current.classList.remove('is-blurred');
+    current = null;
+  };
+
+  const enable = () => {
+    io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting || entry.target === current) return;
+        if (current) current.classList.remove('is-blurred');
+        current = entry.target;
+        current.classList.add('is-blurred');
+      });
+    }, { rootMargin: '-50% 0px -50% 0px' });
+    sections.forEach(s => io.observe(s));
+  };
+
+  const apply = () => {
+    disable();
+    if (mq.matches) enable();
+  };
+  mq.addEventListener('change', apply);
+  apply();
+})();
 
 // ============================================
 // 5. AMBIENT DARK STARFIELD / DUST CANVAS (Optimized)
@@ -268,6 +476,7 @@ function openVideoModal(videoId) {
     modalIframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
+    window.__lenis?.stop();
     if (closeModal) closeModal.focus();
   }
 }
@@ -278,6 +487,7 @@ function closeVideoModal() {
     modal.classList.remove('open');
     modalIframe.src = '';
     document.body.style.overflow = 'auto';
+    window.__lenis?.start();
     if (modalReturnFocus && modalReturnFocus.focus) modalReturnFocus.focus();
     modalReturnFocus = null;
   }
@@ -329,6 +539,7 @@ function openCoverModal(imageSrc, title, artist) {
     coverModal.setAttribute('role', 'dialog');
     coverModal.setAttribute('aria-modal', 'true');
     coverModal.setAttribute('aria-label', 'cover art');
+    coverModal.setAttribute('data-lenis-prevent', '');
     coverModal.innerHTML = `
       <div class="modal-content" style="max-width: 580px; aspect-ratio: auto; background: transparent; display: flex; flex-direction: column; align-items: center; position: relative; border: none; box-shadow: none;">
         <button type="button" aria-label="close" class="close-modal" id="cover-close-btn" style="position: absolute; top: -42px; right: 4px; color: var(--text-secondary); font-size: 2.2rem; cursor: pointer; z-index: 10; opacity: 0.8; transition: opacity 0.2s, color 0.2s;">&times;</button>
@@ -367,6 +578,7 @@ function openCoverModal(imageSrc, title, artist) {
   coverReturnFocus = document.activeElement;
   coverModal.classList.add('open');
   document.body.style.overflow = 'hidden';
+  window.__lenis?.stop();
   document.getElementById('cover-close-btn')?.focus();
 }
 
@@ -377,6 +589,7 @@ function closeCoverModal() {
   if (coverModal && coverModal.classList.contains('open')) {
     coverModal.classList.remove('open');
     document.body.style.overflow = 'auto';
+    window.__lenis?.start();
     if (coverReturnFocus && coverReturnFocus.focus) coverReturnFocus.focus();
     coverReturnFocus = null;
   }
@@ -420,39 +633,63 @@ bookingButtons.forEach(btn => {
   });
 });
 
-// ============================================
-// 11. SMOOTH SCROLL FOR NAV LINKS
-// ============================================
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    const href = this.getAttribute('href');
-    if (href === '#') return;
+// === SOCIAL PLACEHOLDERS ===
+// Never ship a broken link: hide any button whose href is still a placeholder.
+document.querySelectorAll('a[href*="REPLACE_WITH"]').forEach(a => { a.hidden = true; });
 
-    const target = document.querySelector(href);
-    if (target) {
-      e.preventDefault();
-      const headerHeight = document.querySelector('header')?.offsetHeight || 0;
-      const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight - 20;
+// ============================================
+// 11. IN-PAGE ANCHORS → scrollToTarget()
+// Delegated. The skip link is left native so it moves keyboard focus.
+// ============================================
+const isPlainClick = (e) =>
+  !e.defaultPrevented && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
 
-      window.scrollTo({
-        top: targetPosition,
-        behavior: 'smooth'
-      });
-    }
+document.addEventListener('click', (e) => {
+  if (!isPlainClick(e)) return;
+  const a = e.target.closest('a[href^="#"]');
+  if (!a || a.matches('[data-scroll-to-contact], .skip-link')) return;
+  const id = decodeURIComponent(a.getAttribute('href').slice(1));
+  const target = id && document.getElementById(id);
+  if (!target) return;
+  e.preventDefault();
+  if (mobileNav && mobileNav.classList.contains('open')) setMobileNav(false);
+  scrollToTarget(target);
+});
+
+// === SCROLL TO CONTACT === scroll, then put the cursor in the name field.
+document.addEventListener('click', (e) => {
+  if (!isPlainClick(e)) return;
+  const cta = e.target.closest('[data-scroll-to-contact]');
+  const contact = document.getElementById('contact');
+  if (!cta || !contact) return;
+  e.preventDefault();
+  if (mobileNav && mobileNav.classList.contains('open')) setMobileNav(false);
+  scrollToTarget(contact, () => {
+    document.getElementById('contact-name')?.focus({ preventScroll: true });
   });
+  history.replaceState(null, '', '#contact');
 });
 
 // ============================================
 // 12. 3D HERO INTERACTION (Viewport Client Coordinates)
 // ============================================
+// Owns .hero-content's transform. GSAP animates .hero-fade (outside it) and
+// the children inside it, never this element. Desktop pointers only.
 const container = document.querySelector('.hero-container');
 const content = document.getElementById('heroContent');
+const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 
-if (container && content) {
+if (container && content && !reduceMotion) {
+  let heroInView = true;
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(([entry]) => {
+      heroInView = entry.isIntersecting;
+    }).observe(container);
+  }
+
   const handleTilt = (clientX, clientY) => {
+    if (!heroInView || !finePointer.matches) return;
     const rect = container.getBoundingClientRect();
-    // Only tilt when hero is within viewport
-    if (rect.bottom < 0 || rect.top > window.innerHeight) return;
 
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -471,13 +708,6 @@ if (container && content) {
   container.addEventListener('mousemove', (e) => {
     handleTilt(e.clientX, e.clientY);
   });
-
-  // Touch Movement (Mobile/Tablet)
-  container.addEventListener('touchmove', (e) => {
-    if (e.touches && e.touches[0]) {
-      handleTilt(e.touches[0].clientX, e.touches[0].clientY);
-    }
-  }, { passive: true });
 
   // Reset to flat when mouse leaves
   container.addEventListener('mouseleave', () => {
@@ -557,15 +787,101 @@ if (playerEl) {
   const tDur = playerEl.querySelector('.t-dur');
   const status = playerEl.querySelector('[data-player-status]');
   const tracks = Array.from(playerEl.querySelectorAll('.track'));
+  const playlistEl = playerEl.querySelector('.playlist');
+  const slots = tracks.map(t => t.closest('li'));
+  const skipBtns = Array.from(playerEl.querySelectorAll('.player-skip'));
+  const nowCover = playerEl.querySelector('.now-cover');
+  const ambient = playerEl.querySelector('.player-ambient');
+  const dotsEl = playerEl.querySelector('.player-dots');
+  const dots = tracks.map(() => {
+    const d = document.createElement('span');
+    if (dotsEl) dotsEl.appendChild(d);
+    return d;
+  });
 
-  let index = -1;
+  let index = -1;     // loaded track
+  let view = 0;       // centred card (differs from index only while browsing an empty playlist)
   let pending = tracks.length;
   let available = 0;
   const ctrl = { pause: () => audio.pause() };
 
-  const setProgress = (t, d) => {
-    const pct = d > 0 ? (t / d) * 100 : 0;
-    seek.style.setProperty('--progress', pct + '%');
+  // --- Artwork: only tracks with a data-cover get an image ---
+  const coverImg = (src) => {
+    const img = new Image();
+    img.alt = '';
+    img.decoding = 'async';
+    img.src = src;
+    return img;
+  };
+  tracks.forEach(btn => {
+    if (btn.dataset.cover) btn.querySelector('.track-cover')?.appendChild(coverImg(btn.dataset.cover));
+  });
+  const showCover = (btn) => {
+    const src = btn && btn.dataset.cover;
+    [nowCover, ambient].forEach(el => {
+      if (!el) return;
+      el.querySelector('img')?.remove();
+      if (src) el.appendChild(coverImg(src));
+    });
+  };
+
+  // --- Carousel (endless loop): each slot gets its shortest circular
+  // distance from the centre card; CSS turns --offset / --abs into the 3D layout. ---
+  const n = tracks.length;
+  const wrap = (j) => ((j % n) + n) % n;
+
+  // Next playable track in a direction, wrapping around; never the track itself.
+  const availableFrom = (from, dir) => {
+    for (let k = 1; k < n; k++) {
+      const j = wrap(from + dir * k);
+      if (!tracks[j].disabled) return j;
+    }
+    return -1;
+  };
+
+  const browsing = () => available === 0 || index === -1;
+
+  const updateSkips = () => {
+    skipBtns.forEach(b => {
+      b.disabled = browsing() ? n < 2 : availableFrom(index, Number(b.dataset.skip)) === -1;
+    });
+  };
+
+  const positionCards = () => {
+    slots.forEach((li, j) => {
+      let offset = wrap(j - view);
+      if (offset > n / 2) offset -= n;
+      const abs = Math.abs(offset);
+      // A card wrapping from one end to the other would fly across the stage
+      // behind the others; place it without a transition instead.
+      const prev = Number(li.dataset.offset);
+      const jump = li.dataset.offset !== undefined && Math.abs(offset - prev) > 2;
+      if (jump) li.style.transition = 'none';
+      li.style.setProperty('--offset', offset);
+      li.style.setProperty('--abs', Math.min(abs, 3));
+      li.style.zIndex = String(10 - abs);
+      li.classList.toggle('is-far', abs > 2);
+      li.dataset.offset = offset;
+      if (jump) {
+        void li.offsetWidth;
+        li.style.transition = '';
+      }
+    });
+    dots.forEach((d, j) => d.classList.toggle('is-active', j === view));
+    updateSkips();
+  };
+
+  // <audio> stays the source of truth. Playback eases the playhead; user
+  // seeks and reduced motion set it instantly.
+  const setProgress = (t, d, smooth) => {
+    const pct = (d > 0 ? (t / d) * 100 : 0) + '%';
+    if (smooth && hasGsap && !reduceMotion) {
+      gsap.to(seek, { '--progress': pct, duration: 0.15, ease: 'none', overwrite: true });
+    } else if (hasGsap) {
+      gsap.set(seek, { '--progress': pct, overwrite: true });
+    } else {
+      seek.style.setProperty('--progress', pct);
+    }
     tCur.textContent = formatTime(t);
   };
 
@@ -602,6 +918,9 @@ if (playerEl) {
     toggle.disabled = false;
     seek.disabled = false;
     playerEl.classList.remove('is-empty');
+    view = i;
+    showCover(btn);
+    positionCards();
   };
 
   const play = () => {
@@ -622,6 +941,7 @@ if (playerEl) {
     if (pending > 0) return;
     if (available === 0) showEmpty();
     else if (index === -1) load(nextAvailable(-1));
+    positionCards();
   };
 
   // Probe every file once so missing ones show as disabled rather than failing on click.
@@ -665,6 +985,72 @@ if (playerEl) {
     else audio.pause();
   });
 
+  // Prev / next: jump to the neighbouring playable track, keeping playback
+  // going if it was already playing. With nothing playable, just browse cards.
+  const step = (dir) => {
+    if (browsing()) {
+      view = wrap(view + dir);
+      positionCards();
+      return;
+    }
+    const j = availableFrom(index, dir);
+    if (j === -1) return;
+    const wasPlaying = !audio.paused;
+    load(j);
+    if (wasPlaying) play();
+  };
+
+  skipBtns.forEach(b => b.addEventListener('click', () => step(Number(b.dataset.skip))));
+
+  if (playlistEl) {
+    playlistEl.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      step(e.key === 'ArrowRight' ? 1 : -1);
+      const centre = tracks[view];
+      if (centre && !centre.disabled) centre.focus({ preventScroll: true });
+    });
+
+    // Horizontal trackpad / wheel scroll steps through the loop; vertical
+    // scrolling is left alone so the page still scrolls over the carousel.
+    let wheelLockedUntil = 0;
+    playlistEl.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaX) < 8 || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      const now = performance.now();
+      if (now < wheelLockedUntil) return;
+      wheelLockedUntil = now + 450;
+      step(e.deltaX > 0 ? 1 : -1);
+    }, { passive: false });
+
+    // Horizontal swipe / drag (touch-action: pan-y leaves vertical scrolling native).
+    let swipe = null;
+    let swallowClick = false;
+    playlistEl.addEventListener('pointerdown', (e) => {
+      if (e.button === 0) swipe = { x: e.clientX, y: e.clientY };
+    });
+    playlistEl.addEventListener('pointercancel', () => { swipe = null; });
+    playlistEl.addEventListener('pointerup', (e) => {
+      if (!swipe) return;
+      const dx = e.clientX - swipe.x;
+      const dy = e.clientY - swipe.y;
+      swipe = null;
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      step(dx < 0 ? 1 : -1);
+      // The swipe also ends in a click on the card under the pointer; drop it.
+      swallowClick = true;
+      setTimeout(() => { swallowClick = false; }, 0);
+    });
+    playlistEl.addEventListener('click', (e) => {
+      if (!swallowClick) return;
+      swallowClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
+  }
+
+  positionCards();
+
   seek.addEventListener('input', () => {
     const t = parseFloat(seek.value);
     audio.currentTime = t;
@@ -678,7 +1064,7 @@ if (playerEl) {
 
   audio.addEventListener('timeupdate', () => {
     seek.value = audio.currentTime;
-    setProgress(audio.currentTime, audio.duration);
+    setProgress(audio.currentTime, audio.duration, true);
   });
 
   audio.addEventListener('play', () => {
@@ -693,8 +1079,9 @@ if (playerEl) {
     if (status) status.textContent = 'paused';
   });
 
+  // The playlist loops: after the last track it carries on from the first.
   audio.addEventListener('ended', () => {
-    const next = nextAvailable(index);
+    const next = availableFrom(index, 1);
     if (next !== -1) {
       load(next);
       play();
@@ -711,6 +1098,7 @@ if (playerEl) {
     const next = nextAvailable(index);
     if (next !== -1) load(next);
     else showEmpty();
+    positionCards();
   });
 }
 
@@ -735,6 +1123,9 @@ if (abEl) {
   const tDur = abEl.querySelector('.t-dur');
   const label = abEl.querySelector('.ab-label');
   const barsEl = abEl.querySelector('.ab-bars');
+  const visual = abEl.querySelector('.ab-visual');
+  const timeTag = abEl.querySelector('.ab-time');
+  const captionTitle = abEl.querySelector('.ab-caption-title');
   const opts = Array.from(abEl.querySelectorAll('.ab-opt'));
   const note = abEl.querySelector('[data-ab-status]');
 
@@ -742,6 +1133,9 @@ if (abEl) {
   let active = null;
   let rafId = null;
   let playedBars = 0;
+  // The sweep is feedback for a user's own A/B switch only — never on load,
+  // scroll-in, or programmatic state changes.
+  let userHasInteracted = false;
 
   // Waveform-style bars: seeded so the shape is the same on every load.
   let seed = 11;
@@ -788,7 +1182,32 @@ if (abEl) {
     seek.style.setProperty('--progress', (d > 0 ? (t / d) * 100 : 0) + '%');
     tCur.textContent = formatTime(t);
     setPlayedBars(d > 0 ? t / d : 0);
+    updateTimeTag(st);
   };
+
+  // Live "m:ss / m:ss" from the raw file: it's the master clock (the final
+  // file is snapped to it), so this always agrees with the seek bar.
+  const updateTimeTag = (st) => {
+    if (!timeTag) return;
+    const a = st && st.raw;
+    const ready = st && st.ok === true && a && isFinite(a.duration);
+    timeTag.textContent = ready
+      ? formatTime(a.currentTime) + ' / ' + formatTime(a.duration)
+      : '0:00 / –:––';
+  };
+
+  const sweep = (toFinal) => {
+    if (!userHasInteracted || reduceMotion || !visual) return;
+    visual.classList.remove('is-sweeping');
+    visual.classList.toggle('is-reverse', !toFinal);
+    void visual.offsetWidth; // restart the animation
+    visual.classList.add('is-sweeping');
+  };
+  if (visual) {
+    visual.addEventListener('animationend', (e) => {
+      if (e.animationName === 'ab-sweep') visual.classList.remove('is-sweeping');
+    });
+  }
 
   const renderControls = () => {
     const st = active;
@@ -946,7 +1365,22 @@ if (abEl) {
       st.fin.preload = 'auto';
     }
     if (focus) st.tab.focus();
+    if (captionTitle) captionTitle.textContent = st.title;
+    positionInk();
     renderControls();
+  };
+
+  // Sliding active underline for the segmented tabs (transform only).
+  const ink = document.createElement('span');
+  ink.className = 'ab-tabs-ink';
+  ink.setAttribute('aria-hidden', 'true');
+  const positionInk = () => {
+    const tab = active && active.tab;
+    if (!tab) return;
+    // Pill highlight behind the active chip: size snaps, only the move animates.
+    ink.style.width = tab.offsetWidth + 'px';
+    ink.style.height = tab.offsetHeight + 'px';
+    ink.style.transform = `translate(${tab.offsetLeft}px, ${tab.offsetTop}px)`;
   };
 
   // Build tabs
@@ -971,6 +1405,8 @@ if (abEl) {
     st.tab = tab;
     createAudio(st);
   });
+  tabsEl.appendChild(ink);
+  if ('ResizeObserver' in window) new ResizeObserver(positionInk).observe(tabsEl);
 
   playBtn.addEventListener('click', () => {
     if (!active) return;
@@ -986,9 +1422,25 @@ if (abEl) {
     updateTimes(active);
   });
 
+  // The waveform is the visible progress bar: click a point to jump there.
+  barsEl.addEventListener('click', (e) => {
+    if (!active || active.ok !== true) return;
+    const r = barsEl.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const t = ratio * active.raw.duration;
+    active.raw.currentTime = t;
+    active.fin.currentTime = t;
+    updateTimes(active);
+  });
+
+  // Buttons fire click for Enter/Space too, so this covers keyboard toggles.
   opts.forEach(o => o.addEventListener('click', () => {
+    userHasInteracted = true;
+    if (o.dataset.side === side) return;
     side = o.dataset.side;
     applySide();
+    if (active) updateTimeTag(active);
+    sweep(side === 'final');
   }));
 
   applySide();

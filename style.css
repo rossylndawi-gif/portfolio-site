@@ -83,6 +83,32 @@
   --glass-shadow: var(--shadow-panel);
   --glass-shadow-hover: var(--shadow-raised);
   --glass-blur: 0px;
+
+  /* --- Frosted glass (visionOS-style panels, nav, toolbars) --- */
+  --frost-fill: rgba(26, 26, 30, 0.55);
+  --frost-fill-strong: rgba(18, 18, 22, 0.82);
+  --frost-chip: rgba(255, 255, 255, 0.07);
+  --frost-chip-hover: rgba(255, 255, 255, 0.11);
+  --frost-rim: rgba(255, 255, 255, 0.12);
+  --frost-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --frost-blur: blur(24px) saturate(160%);
+  --radius-2xl: 28px;
+}
+
+/* === GLASS === shared frosted surface. Falls back to a denser fill where
+   backdrop-filter is unsupported, and (≤768px, see MEDIA QUERIES) on phones. */
+.glass {
+  background: var(--frost-fill);
+  -webkit-backdrop-filter: var(--frost-blur);
+  backdrop-filter: var(--frost-blur);
+  border: 1px solid var(--frost-rim);
+  box-shadow: var(--frost-highlight), var(--shadow-raised);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--frost-fill-strong);
+  }
 }
 
 /* ==========================================================================
@@ -94,8 +120,22 @@
   padding: 0;
 }
 
-html {
-  scroll-behavior: smooth;
+/* === LENIS === base rules (smooth scrolling is JS-driven; no scroll-behavior) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
 }
 
 body {
@@ -111,10 +151,10 @@ body {
   min-height: 100vh;
 }
 
+/* The outline follows each element's own border-radius (pills, round buttons). */
 :focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--signal-bright);
   outline-offset: 3px;
-  border-radius: var(--radius-sm);
 }
 
 ::selection {
@@ -231,51 +271,66 @@ header {
   height: 60px;
   width: 92%;
   max-width: 1120px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 clamp(1rem, 3vw, 2rem);
+  padding: 0 0.5rem 0 clamp(1.1rem, 3vw, 1.6rem);
   transition: height 0.25s var(--ease), background 0.25s ease, box-shadow 0.25s ease;
-  background: rgba(16, 14, 12, 0.88);
-  border: 1px solid var(--hairline-strong);
-  box-shadow: var(--shadow-panel), var(--bevel);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* Frosted pill toolbar (see .glass); the nav always keeps real blur. */
+  background: var(--frost-fill);
+  border: 1px solid var(--frost-rim);
+  box-shadow: var(--frost-highlight), var(--shadow-panel);
+  -webkit-backdrop-filter: var(--frost-blur);
+  backdrop-filter: var(--frost-blur);
 }
 
 /* script.js block 2 toggles this class past 50px of scroll. */
 header.is-scrolled {
   height: 56px;
-  background: rgba(11, 10, 9, 0.95);
-  border-color: var(--signal-line);
-  box-shadow: var(--shadow-raised), var(--bevel);
+  background: rgba(22, 22, 26, 0.72);
+  box-shadow: var(--frost-highlight), var(--shadow-raised);
 }
 
+/* === NAV WORDMARK === italic "by" + display "OCOMPOS" + record dot */
 .logo-txt {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.logo-by {
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.05rem;
+  letter-spacing: normal;
+  text-transform: lowercase;
+  color: var(--text-secondary);
+}
+
+.logo-name {
+  display: inline-flex;
+  align-items: center;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 1.05rem;
   letter-spacing: -0.02em;
-  text-transform:none;
-  color: var(--text-primary);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-}
-
-.logo-txt span {
+  text-transform: uppercase;
   color: var(--text-primary);
 }
 
 /* Record indicator. */
-.logo-txt::after {
+.logo-name::after {
   content: '';
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--signal);
-  margin-left: 0.55rem;
+  margin-left: 0.45rem;
   box-shadow: 0 0 8px var(--signal-glow);
   animation: rec-pulse 2.4s ease-in-out infinite;
 }
@@ -285,12 +340,15 @@ header.is-scrolled {
   50%      { opacity: 0.35; }
 }
 
-nav {
+/* Links are pill chips; the active one (scroll-spy aria-current) is a raised
+   glass chip, like the URL field in a visionOS toolbar. */
+header nav {
   display: flex;
   align-items: center;
+  gap: 0.2rem;
 }
 
-nav a {
+header nav a {
   font-family: var(--font-legend);
   font-size: var(--text-legend);
   display: inline-flex;
@@ -301,34 +359,23 @@ nav a {
   letter-spacing: 0.14em;
   color: var(--text-muted);
   text-decoration: none;
-  margin-left: 0.4rem;
-  padding: 0.5rem 0.7rem;
-  border-radius: var(--radius-sm);
+  padding: 0 1rem;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
   position: relative;
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-nav a::after {
-  content: '';
-  position: absolute;
-  left: 0.7rem;
-  right: 0.7rem;
-  bottom: 0.55rem;
-  height: 1px;
-  background: var(--signal);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.25s var(--ease);
-}
-
-nav a:hover,
-nav a[aria-current] {
+header nav a:hover {
   color: var(--text-primary);
+  background: var(--frost-chip);
 }
 
-nav a:hover::after,
-nav a[aria-current]::after {
-  transform: scaleX(1);
+header nav a[aria-current] {
+  color: var(--text-primary);
+  background: var(--frost-chip-hover);
+  border-color: var(--frost-rim);
+  box-shadow: var(--frost-highlight);
 }
 
 .back-btn {
@@ -339,18 +386,18 @@ nav a[aria-current]::after {
   letter-spacing: 0.14em;
   color: var(--text-secondary);
   text-decoration: none;
-  padding: 0.45rem 1rem;
-  border: 1px solid var(--hairline-strong);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  margin-left: 1.2rem;
+  padding: 0 1.1rem;
+  border: 1px solid var(--frost-rim);
+  border-radius: var(--radius-full);
+  background: var(--frost-chip);
+  box-shadow: var(--frost-highlight);
+  margin-left: 0.6rem;
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .back-btn:hover {
-  color: var(--signal-bright);
-  border-color: var(--signal-line);
-  background: var(--signal-wash);
+  color: var(--text-primary);
+  background: var(--frost-chip-hover);
 }
 
 /* ==========================================================================
@@ -366,12 +413,18 @@ nav a[aria-current]::after {
   z-index: 100;
   width: var(--control-size);
   height: var(--control-size);
-  margin-right: -10px;
   padding: 0;
-  background: transparent;
-  border: 0;
-  border-radius: var(--radius-sm);
+  /* Round glass button, like the toolbar icons in visionOS. */
+  background: var(--frost-chip);
+  border: 1px solid var(--frost-rim);
+  box-shadow: var(--frost-highlight);
+  border-radius: 50%;
   touch-action: manipulation;
+  transition: background-color 0.2s ease;
+}
+
+.hamburger:hover {
+  background: var(--frost-chip-hover);
 }
 
 .hamburger span {
@@ -381,10 +434,15 @@ nav a[aria-current]::after {
   transition: transform 0.3s var(--ease), opacity 0.2s ease;
 }
 
+/* === MOBILE NAV === glass overlay entering from the top, links stagger in.
+   visibility keeps the closed menu's links out of the tab order. */
 .mobile-nav {
   position: fixed;
   inset: 0;
-  background: var(--ink-900);
+  background: rgba(6, 6, 8, 0.55);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--hairline);
   z-index: 90;
   display: flex;
   flex-direction: column;
@@ -392,13 +450,18 @@ nav a[aria-current]::after {
   justify-content: center;
   gap: 1.4rem;
   opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.98);
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 280ms var(--ease), transform 280ms var(--ease), visibility 0s linear 280ms;
 }
 
 .mobile-nav.open {
   opacity: 1;
+  visibility: visible;
+  transform: none;
   pointer-events: auto;
+  transition: opacity 280ms var(--ease), transform 280ms var(--ease), visibility 0s;
 }
 
 .mobile-nav a {
@@ -410,7 +473,15 @@ nav a[aria-current]::after {
   text-decoration: none;
   text-transform: uppercase;
   padding: 0.4rem 1.5rem;
-  transition: color 0.2s ease;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease), color 0.2s ease;
+}
+
+.mobile-nav.open a {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(var(--i, 0) * 40ms), calc(var(--i, 0) * 40ms), 0s;
 }
 
 .mobile-nav a:hover,
@@ -458,6 +529,17 @@ nav a[aria-current]::after {
   display: none;
 }
 
+/* GSAP (mobile fade) owns this element. It also supplies the perspective for
+   the tilted .hero-content inside it. */
+.hero-fade {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  perspective: 1100px;
+}
+
 .hero-content {
   position: relative;
   z-index: 10;
@@ -481,9 +563,15 @@ nav a[aria-current]::after {
   margin: 0 auto 2rem auto;
 }
 
+/* GSAP (desktop pin timeline) owns this wrapper; hover stays on .hero-logo. */
+.hero-logo-wrap {
+  display: flex;
+  justify-content: center;
+}
+
 .hero-logo {
-  width: 210px;
-  max-width: 58vw;
+  width: 300px;
+  max-width: 78vw;
   height: auto;
   display: block;
   filter:
@@ -529,44 +617,100 @@ nav a[aria-current]::after {
 /* ==========================================================================
    BUTTONS
    ========================================================================== */
+/* === HERO CTAs === pill buttons: bright primary + glass secondary.
+   .hero-actions is GSAP's (pin timeline); the lift below belongs to .btn only. */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
 .btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 52px;
+  padding: 0 1.9rem;
+  border-radius: var(--radius-full);
   font-family: var(--font-legend);
-  padding: 0.85rem 1.8rem;
-  border-radius: var(--radius-sm);
-  text-decoration: none;
-  font-size: 0.7rem;
+  font-size: 0.74rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  margin: 0 5px;
-  transition: background 0.22s var(--ease), color 0.22s ease,
-              border-color 0.22s ease, transform 0.22s var(--ease);
-  display: inline-block;
+  text-decoration: none;
+  white-space: nowrap;
+  touch-action: manipulation;
+  transition: transform 0.25s var(--ease), background-color 0.25s ease,
+              border-color 0.25s ease, box-shadow 0.3s ease, color 0.2s ease;
 }
 
+.btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.25s var(--ease);
+}
+
+.btn-icon-lead {
+  fill: currentColor;
+}
+
+.btn-icon-trail {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Primary: near-white pill, the brightest thing in the hero. */
 .btn-filled {
-  background: var(--signal);
+  background: var(--text-primary);
   color: var(--ink-900);
-  border: 1px solid var(--signal);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 30px rgba(0, 0, 0, 0.55);
 }
 
-.btn-filled:hover {
-  background: var(--signal-bright);
-  border-color: var(--signal-bright);
+.btn-filled:hover,
+.btn-filled:focus-visible {
+  background: #ffffff;
   transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 #ffffff, 0 0 0 6px rgba(255, 255, 255, 0.08), 0 14px 40px rgba(163, 173, 187, 0.3);
 }
 
+/* Secondary: frosted glass pill. */
 .btn-outline {
-  border: 1px solid var(--hairline-strong);
+  background: var(--frost-chip);
   color: var(--text-primary);
-  background: transparent;
+  border: 1px solid var(--frost-rim);
+  box-shadow: var(--frost-highlight), 0 10px 30px rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
 }
 
-.btn-outline:hover {
-  border-color: var(--signal-line);
-  color: var(--signal-bright);
-  background: var(--signal-wash);
+.btn-outline:hover,
+.btn-outline:focus-visible {
+  background: var(--frost-chip-hover);
+  border-color: rgba(255, 255, 255, 0.28);
   transform: translateY(-2px);
+  box-shadow: var(--frost-highlight), 0 0 0 6px rgba(255, 255, 255, 0.04), 0 14px 40px rgba(0, 0, 0, 0.55);
+}
+
+.btn:hover .btn-icon-lead,
+.btn:focus-visible .btn-icon-lead {
+  transform: scale(1.15);
+}
+
+.btn:hover .btn-icon-trail,
+.btn:focus-visible .btn-icon-trail {
+  transform: translateX(4px);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.97);
 }
 
 .glass-btn {
@@ -617,19 +761,6 @@ section {
   text-wrap: balance;
 }
 
-/* Amber tick before the label, like a channel marker. Inline-block so it
-   tracks text-align — the About heading is left-aligned inline. */
-.section-title::before {
-  content: '';
-  display: inline-block;
-  width: 26px;
-  height: 3px;
-  background: var(--signal);
-  vertical-align: middle;
-  margin-right: 0.85rem;
-  transform: translateY(-0.16em);
-}
-
 /* ==========================================================================
    REVEAL / HOVER
    ========================================================================== */
@@ -644,6 +775,11 @@ section {
   transform: translateY(0);
 }
 
+/* === GSAP REVEALS === GSAP owns opacity/transform on .reveal when loaded. */
+.gsap-ready .reveal {
+  transition: none;
+}
+
 .port-grid .reveal {
   transition-delay: calc(var(--i) * 0.07s);
 }
@@ -655,16 +791,37 @@ section {
 /* ==========================================================================
    SERVICES — equipment panels
    ========================================================================== */
+/* === SERVICES GRID === 1 col ≤768, 2 cols 769–1199, 4 cols ≥1200 */
 .svc-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  grid-template-columns: 1fr;
   gap: 1.2rem;
-  max-width: 1150px;
+  max-width: 1240px;
   margin: 0 auto;
+}
+
+@media (min-width: 769px) {
+  .svc-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .svc-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Reveal owner (GSAP / IO). Never gets a hover transform. */
+.svc-cell {
+  display: flex;
 }
 
 .svc-item {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   text-align: left;
   background: var(--ink-800);
   border: 1px solid var(--ink-500);
@@ -675,8 +832,19 @@ section {
   transition: border-color 0.3s ease, transform 0.3s var(--ease), box-shadow 0.3s ease;
 }
 
-/* Signal bar that fills on hover, like a level meter arming. */
+/* Soft accent glow from the bottom-right corner; only opacity animates. */
 .svc-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 100% 100%, var(--signal-glow) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+/* Signal bar that fills on hover, like a level meter arming. */
+.svc-item::after {
   content: '';
   position: absolute;
   top: 0;
@@ -689,14 +857,49 @@ section {
   transition: transform 0.4s var(--ease);
 }
 
-.svc-item:hover {
+.svc-item:hover,
+.svc-item:focus-within {
   transform: translateY(-3px);
-  border-color: var(--ink-400);
+  border-color: var(--signal-line);
   box-shadow: var(--shadow-raised), var(--bevel);
 }
 
-.svc-item:hover::before {
+.svc-item:hover::before,
+.svc-item:focus-within::before {
+  opacity: 1;
+}
+
+.svc-item:hover::after,
+.svc-item:focus-within::after {
   transform: scaleX(1);
+}
+
+.svc-index {
+  position: absolute;
+  top: 0.9rem;
+  right: 1.2rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.6rem, 4vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--ink-500);
+  pointer-events: none;
+  user-select: none;
+}
+
+.svc-glyph {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  color: var(--signal-bright);
+  margin-bottom: 1.3rem;
+  flex-shrink: 0;
+}
+
+.svc-item h3,
+.svc-item p {
+  position: relative;
 }
 
 .svc-item h3 {
@@ -1139,6 +1342,7 @@ section {
    SHARED TRANSPORT — round play button + seek bar (sounds + before/after)
    ========================================================================== */
 .player-toggle {
+  position: relative;
   flex-shrink: 0;
   width: 56px;
   height: 56px;
@@ -1183,8 +1387,25 @@ section {
   transform: scale(0.95);
 }
 
-.is-playing .player-toggle {
-  box-shadow: 0 0 0 6px var(--signal-wash), 0 0 26px var(--signal-glow);
+/* Pulsing ring while playing: lives on ::before so it never touches the
+   button's own hover/press transform. */
+.player-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--signal-bright);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.is-playing .player-toggle::before {
+  animation: play-pulse 1.6s var(--ease) infinite;
+}
+
+@keyframes play-pulse {
+  0%   { transform: scale(1);    opacity: 0.7; }
+  100% { transform: scale(1.55); opacity: 0; }
 }
 
 .player-toggle:disabled {
@@ -1274,154 +1495,221 @@ section {
 }
 
 /* ==========================================================================
-   SOUNDS PLAYER — main transport + numbered playlist
+   SOUNDS PLAYER — 3D card carousel + floating glass transport pill
+   Transform owners: script.js positions each .playlist > li (via --offset /
+   --abs); GSAP reveals .player and the .track cards inside the slots.
    ========================================================================== */
 .player {
-  max-width: 960px;
+  position: relative;
+  isolation: isolate;
+  max-width: 1120px;
   margin: 0 auto;
-  background: var(--surface-panel);
-  border: 1px solid var(--ink-500);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-panel), var(--bevel);
-  overflow: hidden;
+  padding-top: 0.5rem;
+  overflow-x: clip;            /* side cards run off the edges without page scroll */
 }
 
-.player-main {
-  display: flex;
-  align-items: center;
-  gap: clamp(1rem, 2.5vw, 1.6rem);
-  padding: clamp(1.25rem, 3vw, 2rem);
-  border-bottom: 1px solid var(--hairline);
-  background: linear-gradient(to bottom, var(--ink-700), var(--surface-panel));
+/* Light for the glass to blur: soft signal-tinted glows, plus the active
+   track's cover (heavily blurred) once covers exist. */
+.player-ambient {
+  position: absolute;
+  inset: -2rem 0 -1rem;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 48% at 50% 38%, rgba(95, 107, 124, 0.30), transparent 70%),
+    radial-gradient(26% 36% at 22% 62%, rgba(163, 173, 187, 0.10), transparent 70%),
+    radial-gradient(26% 36% at 78% 62%, rgba(61, 69, 82, 0.30), transparent 70%);
 }
 
-.player-info {
-  flex: 1;
-  min-width: 0;
+.player-ambient img {
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  width: min(60%, 520px);
+  aspect-ratio: 1;
+  object-fit: cover;
+  transform: translateX(-50%);
+  filter: blur(70px) saturate(140%);
+  opacity: 0.45;
 }
 
-.now-title {
-  font-family: var(--font-display);
-  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.now-meta {
-  font-family: var(--font-legend);
-  font-size: var(--text-legend);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--text-muted);
-  margin-top: 0.2rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.player-info .seek-row {
-  margin-top: 0.4rem;
-}
-
+/* --- Carousel --- */
 .playlist {
+  --card-w: clamp(230px, 28vw, 320px);
+  position: relative;
+  height: calc(var(--card-w) * 1.12);
+  margin: 0 auto;
+  padding: 0;
   list-style: none;
-  padding: 0.5rem;
-  counter-reset: none;
+  perspective: 1600px;
+  touch-action: pan-y;           /* horizontal swipes are ours; vertical scroll stays native */
 }
 
+.playlist > li {
+  --offset: 0;
+  --abs: 0;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--card-w);
+  margin-left: calc(var(--card-w) / -2);
+  /* Neighbours slide out, turn away from the centre and recede. */
+  transform:
+    translateX(calc(var(--offset) * 62%))
+    rotateY(calc(var(--offset) * 24deg))
+    scale(calc(1 - var(--abs) * 0.12));
+  opacity: calc(1 - var(--abs) * 0.3);
+  transition: transform 0.6s var(--ease), opacity 0.45s ease;
+}
+
+.playlist > li.is-far {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* --- Card --- */
 .track {
+  position: relative;
+  display: block;
   width: 100%;
-  min-height: 60px;
-  display: grid;
-  grid-template-columns: 2.4rem 1fr auto;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.65rem 1rem;
-  background: transparent;
-  border: 0;
-  border-radius: var(--radius-sm);
+  aspect-ratio: 1 / 1.12;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  background: var(--ink-800);
+  border: 1px solid var(--frost-rim);
+  box-shadow: var(--frost-highlight), var(--shadow-raised);
   color: var(--text-primary);
   font: inherit;
   text-align: left;
   cursor: pointer;
   touch-action: manipulation;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .track:hover:not(:disabled) {
-  background: var(--ink-700);
+  border-color: rgba(255, 255, 255, 0.24);
 }
 
 .track.is-active {
-  background: var(--signal-wash);
-  box-shadow: inset 2px 0 0 var(--signal);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: var(--frost-highlight), 0 28px 70px rgba(0, 0, 0, 0.75);
 }
 
+/* Plain dark placeholder until a data-cover image is set. */
+.track-cover {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 80% at 30% 20%, rgba(255, 255, 255, 0.05), transparent 60%),
+    linear-gradient(160deg, var(--ink-600), var(--ink-800) 70%);
+}
+
+.track-cover img,
+.now-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Round glass chips on the artwork (number top-left, equalizer top-right). */
 .track-num,
 .eq {
-  grid-column: 1;
-  grid-row: 1;
+  position: absolute;
+  top: 12px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background: rgba(18, 18, 22, 0.6);
+  border: 1px solid var(--frost-rim);
+  box-shadow: var(--frost-highlight);
 }
 
 .track-num {
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.7rem;
   font-family: var(--font-legend);
-  font-size: 0.8rem;
+  font-size: var(--text-legend);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
 }
 
+/* Caption strip, like the title panel under the artwork in visionOS. */
 .track-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.25rem 0.8rem;
+  padding: 0.85rem 1rem;
+  border-radius: 20px;
+  background: rgba(18, 18, 22, 0.78);
+  border: 1px solid var(--frost-rim);
+  box-shadow: var(--frost-highlight);
+}
+
+/* Only the centre card pays for real blur. */
+.track.is-active .track-text {
+  background: var(--frost-fill);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
 }
 
 .track-title {
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: color 0.2s ease;
 }
 
-.track.is-active .track-title {
-  color: var(--signal-bright);
-}
-
-.track-meta,
 .track-year {
+  font-family: var(--font-legend);
+  font-size: var(--text-legend);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+.track-meta {
+  grid-column: 1 / -1;
   font-family: var(--font-legend);
   font-size: var(--text-legend);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.track-year {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Equalizer: replaces the number on the active row; animates only while playing. */
+/* Equalizer chip: shown on the active card; animates only while playing. */
 .eq {
+  right: 12px;
   display: none;
   align-items: flex-end;
+  justify-content: center;
   gap: 2px;
-  height: 14px;
+  width: 38px;
+  padding: 8px 0;
 }
 
 .eq i {
   width: 3px;
   height: 100%;
-  background: var(--signal);
+  background: var(--signal-bright);
   border-radius: 1px;
   transform-origin: bottom;
   transform: scaleY(0.35);
@@ -1429,10 +1717,6 @@ section {
 
 .eq i:nth-child(2) { transform: scaleY(0.7); }
 .eq i:nth-child(3) { transform: scaleY(0.5); }
-
-.track.is-active .track-num {
-  visibility: hidden;
-}
 
 .track.is-active .eq {
   display: inline-flex;
@@ -1451,41 +1735,192 @@ section {
 }
 
 .track.is-unavailable {
-  opacity: 0.45;
   cursor: not-allowed;
+}
+
+.track.is-unavailable .track-cover,
+.track.is-unavailable .track-title {
+  opacity: 0.55;
+}
+
+/* --- Floating transport pill (also used by Before/After) --- */
+.player-bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "prev cover info play next"
+    "seek seek  seek seek seek";
+  align-items: center;
+  gap: 0.2rem 0.8rem;
+  width: 100%;
+  max-width: 600px;
+  margin: clamp(1.6rem, 3vw, 2.2rem) auto 0;
+  padding: 0.75rem 0.85rem 0.25rem;
+  border-radius: var(--radius-2xl);
+}
+
+.player-bar .player-skip[data-skip="-1"] { grid-area: prev; }
+.player-bar .now-cover { grid-area: cover; }
+.player-bar .player-info { grid-area: info; }
+.player-bar .player-toggle { grid-area: play; width: 52px; height: 52px; }
+.player-bar .player-skip[data-skip="1"] { grid-area: next; }
+.player-bar .seek-row { grid-area: seek; padding: 0 0.4rem; }
+
+/* Round glass icon buttons (prev / next). */
+.player-skip {
+  width: var(--control-size);
+  height: var(--control-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--frost-chip);
+  border: 1px solid var(--frost-rim);
+  box-shadow: var(--frost-highlight);
+  color: var(--text-primary);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.player-skip svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.player-skip:hover:not(:disabled) {
+  background: var(--frost-chip-hover);
+}
+
+.player-skip:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.now-cover {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--ink-600), var(--ink-800) 70%);
+  border: 1px solid var(--frost-rim);
+}
+
+.player-info {
+  min-width: 0;
+}
+
+.now-title {
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.now-meta {
+  font-family: var(--font-legend);
+  font-size: var(--text-legend);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .player.is-empty .now-title {
   color: var(--text-secondary);
 }
 
+/* Page dots: the active one stretches into a bar. */
+.player-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 1rem;
+}
+
+.player-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.22);
+  transition: width 0.3s var(--ease), background-color 0.3s ease;
+}
+
+.player-dots span.is-active {
+  width: 28px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
 /* ==========================================================================
-   BEFORE / AFTER — synced A/B comparison
+   BEFORE / AFTER — synced A/B comparison, visionOS-style stage:
+   glass tab chips · artwork card (waveform + caption) · floating side
+   toolbar (A / B) · floating transport pill.
    ========================================================================== */
 .ab {
+  position: relative;
+  isolation: isolate;
   max-width: 960px;
   margin: 0 auto;
-  padding: clamp(1.25rem, 3vw, 2rem);
-  background: var(--surface-panel);
-  border: 1px solid var(--ink-500);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-panel), var(--bevel);
+}
+
+.ab-ambient {
+  position: absolute;
+  inset: -3rem 0 -2rem;          /* no sideways bleed: it would widen the page on phones */
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 50% at 50% 42%, rgba(95, 107, 124, 0.26), transparent 70%),
+    radial-gradient(24% 34% at 12% 55%, rgba(163, 173, 187, 0.10), transparent 70%),
+    radial-gradient(24% 34% at 88% 60%, rgba(61, 69, 82, 0.28), transparent 70%);
 }
 
 .ab-pair {
   display: none;
 }
 
+/* --- Tabs: glass pill chips; the active highlight (.ab-tabs-ink) is sized
+   by script.js and only its transform animates. --- */
 .ab-tabs {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1.4rem;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 1.3rem;
+}
+
+.ab-tabs-ink {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: var(--radius-full);
+  background: var(--frost-chip-hover);
+  border: 1px solid var(--frost-rim);
+  box-shadow: var(--frost-highlight);
+  transition: transform 0.3s var(--ease);
+  pointer-events: none;
 }
 
 .ab-tab {
+  position: relative;
+  z-index: 1;
   min-height: var(--control-size);
-  padding: 0.55rem 1.1rem;
+  padding: 0 1.2rem;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -1494,24 +1929,22 @@ section {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--text-secondary);
-  background: transparent;
-  border: 1px solid var(--ink-500);
-  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: var(--frost-chip);
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
   cursor: pointer;
   touch-action: manipulation;
-  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .ab-tab:hover {
   color: var(--text-primary);
-  border-color: var(--ink-400);
 }
 
 .ab-tab[aria-selected="true"] {
-  background: var(--signal);
-  border-color: var(--signal);
-  color: var(--ink-900);
+  color: var(--text-primary);
+  background: transparent;
 }
 
 .ab-tab-note:empty {
@@ -1520,9 +1953,9 @@ section {
 
 .ab-tab-note {
   font-size: var(--text-legend);
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--radius-sm);
-  background: var(--ink-600);
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text-secondary);
 }
 
@@ -1530,64 +1963,175 @@ section {
   opacity: 0.6;
 }
 
+/* script.js still updates the hidden seek row and status note. */
+.ab [hidden] {
+  display: none !important;
+}
+
+/* The "artwork" card. */
 .ab-visual {
   position: relative;
-  height: clamp(130px, 20vw, 180px);
-  padding: 2.6rem 1rem 1rem;
-  background: var(--ink-900);
-  border: 1px solid var(--ink-500);
-  border-radius: var(--radius-md);
+  height: clamp(250px, 34vw, 380px);
+  padding: clamp(1.4rem, 3vw, 2.2rem) clamp(1.2rem, 4vw, 3rem) 6.6rem;
+  background:
+    radial-gradient(90% 70% at 50% 30%, rgba(95, 107, 124, 0.10), transparent 70%),
+    var(--ink-900);
+  border: 1px solid var(--frost-rim);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--frost-highlight), var(--shadow-raised);
   overflow: hidden;
   transition: opacity 0.3s ease;
 }
 
-.ab-label {
+/* Soft inner vignette over the waveform. */
+.ab-visual::before {
+  content: '';
   position: absolute;
-  top: 0.8rem;
-  left: 1rem;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* A/B sweep: a bright band crossing the waveform. Band sits at the element's
+   centre, so translateX(-50%) → (50%) carries it edge to edge. */
+.ab-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent 47%, var(--signal-glow) 48.5%, var(--signal-bright) 50%, var(--signal-glow) 51.5%, transparent 53%);
+}
+
+.ab-visual.is-sweeping::after {
+  animation: ab-sweep 350ms var(--ease);
+}
+
+.ab-visual.is-sweeping.is-reverse::after {
+  animation-direction: reverse;
+}
+
+@keyframes ab-sweep {
+  0%   { transform: translateX(-50%); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateX(50%);  opacity: 0; }
+}
+
+/* Caption strip over the bottom of the card, like the title panel under the
+   painting in the reference: play · title + live time, version label below. */
+.ab-caption {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "play title time"
+    "play label label";
+  align-items: center;
+  gap: 0.15rem 1rem;
+  padding: 0.7rem 1.15rem 0.7rem 0.7rem;
+  border-radius: 20px;
+  background: var(--frost-fill);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid var(--frost-rim);
+  box-shadow: var(--frost-highlight);
+}
+
+.ab-caption-title {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  grid-area: title;
+}
+
+.ab-caption .ab-play {
+  grid-area: play;
+  width: 52px;
+  height: 52px;
+}
+
+.ab-time {
+  grid-area: time;
+  font-family: var(--font-legend);
+  font-size: var(--text-legend);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+.ab-label {
+  grid-area: label;
   font-family: var(--font-legend);
   font-size: var(--text-legend);
   font-weight: 600;
   letter-spacing: 0.18em;
-  color: var(--text-secondary);
-  border: 1px solid var(--hairline-strong);
-  border-radius: var(--radius-sm);
-  padding: 0.2rem 0.6rem;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
 }
 
 .ab[data-side="final"] .ab-label {
   color: var(--signal-bright);
-  border-color: var(--signal-line);
 }
 
+/* Dual mirrored waveform: each bar is centred on the hairline axis and grows
+   up and down; the lower half is dimmed like a reflection. */
 .ab-bars {
+  position: relative;
+  cursor: pointer;               /* click to seek (script.js) */
   display: flex;
   align-items: center;
   gap: 2px;
   height: 100%;
+  background: linear-gradient(var(--hairline-strong), var(--hairline-strong)) center / 100% 1px no-repeat;
 }
 
 .ab-bar {
+  --bar: var(--ink-400);
+  position: relative;
   flex: 1;
   height: calc(var(--h) * 100%);
   min-height: 3px;
   border-radius: 1px;
-  background: var(--ink-400);
+  background: var(--bar);
   transform-origin: center;
   transition: background 0.25s ease;
 }
 
+.ab-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 50%;
+  background: rgba(3, 3, 4, 0.45);
+  border-radius: 0 0 1px 1px;
+}
+
 .ab-bar.is-played {
-  background: var(--text-secondary);
+  --bar: var(--text-secondary);
 }
 
 .ab[data-side="final"] .ab-bar {
-  background: var(--signal-line);
+  --bar: var(--signal);
 }
 
 .ab[data-side="final"] .ab-bar.is-played {
-  background: var(--signal);
+  --bar: var(--signal-bright);
 }
 
 .ab.is-playing .ab-bar {
@@ -1600,62 +2144,71 @@ section {
   to   { transform: scaleY(0.55); }
 }
 
-.ab.is-unavailable .ab-visual {
+.ab.is-unavailable .ab-bars {
   opacity: 0.45;
 }
 
-.ab-controls {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: clamp(0.8rem, 2vw, 1.4rem);
+/* --- Before / After buttons: two glass pills under the card. --- */
+.ab-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
   margin-top: 1.4rem;
 }
 
-.ab-toggle {
-  display: inline-flex;
-  border: 1px solid var(--ink-500);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
 .ab-opt {
-  min-height: var(--control-size);
-  padding: 0 1rem;
+  min-width: 132px;
+  min-height: 50px;
+  padding: 0 1.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--frost-chip);
+  border: 1px solid var(--frost-rim);
+  box-shadow: var(--frost-highlight), 0 8px 24px rgba(0, 0, 0, 0.4);
   font-family: var(--font-legend);
-  font-size: var(--text-legend);
+  font-size: 0.74rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  white-space: nowrap;
+  letter-spacing: 0.16em;
   color: var(--text-secondary);
-  background: transparent;
-  border: 0;
   cursor: pointer;
   touch-action: manipulation;
-  transition: color 0.2s ease, background 0.2s ease;
+  transition: transform 0.25s var(--ease), background-color 0.25s ease,
+              border-color 0.25s ease, box-shadow 0.3s ease, color 0.2s ease;
 }
 
-.ab-opt + .ab-opt {
-  border-left: 1px solid var(--ink-500);
-}
-
-.ab-opt:hover {
+.ab-opt:hover,
+.ab-opt:focus-visible {
   color: var(--text-primary);
+  background: var(--frost-chip-hover);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-2px);
+  box-shadow: var(--frost-highlight), 0 0 0 5px rgba(255, 255, 255, 0.04), 0 14px 34px rgba(0, 0, 0, 0.55);
 }
 
+.ab-opt:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* Selected: Before is a bright glass pill, After lights up in the accent. */
 .ab-opt[data-side="raw"][aria-pressed="true"] {
-  background: var(--ink-500);
   color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.32);
 }
 
 .ab-opt[data-side="final"][aria-pressed="true"] {
-  background: var(--signal);
   color: var(--ink-900);
+  background: var(--signal-bright);
+  border-color: var(--signal-bright);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 26px var(--signal-glow), 0 10px 28px rgba(0, 0, 0, 0.5);
 }
 
 .ab-note {
   margin-top: 1rem;
+  text-align: center;
   font-family: var(--font-legend);
   font-size: var(--text-legend);
   text-transform: uppercase;
@@ -1774,6 +2327,59 @@ section {
   outline: none;
   border-color: var(--signal);
   box-shadow: 0 0 0 3px var(--signal-wash);
+}
+
+/* === SOCIAL ACTIONS === 1 col ≤479, 2×2 480–1023, 4-across ≥1024.
+   Flex (not grid) so the row stays centred while placeholder buttons are hidden. */
+.social-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  max-width: 820px;
+  margin: 2rem auto 0;
+}
+
+.social-btn {
+  flex: 0 1 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: var(--control-size);
+  margin-top: 0;
+  width: auto;
+  white-space: nowrap;
+}
+
+/* .glass-btn sets display, which would otherwise override the hidden attribute. */
+.social-btn[hidden] {
+  display: none;
+}
+
+.social-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  transition: transform 0.22s var(--ease), color 0.22s ease;
+}
+
+.social-btn:hover svg,
+.social-btn:focus-visible svg {
+  transform: translateX(2px);
+  color: var(--signal-bright);
+}
+
+@media (min-width: 480px) {
+  .social-btn {
+    flex-basis: calc(50% - 0.375rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .social-btn {
+    flex-basis: calc(25% - 0.5625rem);
+  }
 }
 
 /* ==========================================================================
@@ -2228,7 +2834,7 @@ footer {
 }
 
 @media (max-width: 960px) {
-  nav {
+  header nav {
     display: none;
   }
 
@@ -2242,29 +2848,34 @@ footer {
 }
 
 @media (max-width: 768px) {
-  .ab-controls {
-    grid-template-columns: auto 1fr;
+  /* Phones: glass panels skip the backdrop blur (the nav keeps its own). */
+  .glass,
+  .track.is-active .track-text,
+  .ab-caption {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--frost-fill-strong);
   }
 
-  .ab-toggle {
-    grid-column: 1 / -1;
-    width: 100%;
+  .playlist {
+    --card-w: min(64vw, 280px);
   }
 
   .ab-opt {
     flex: 1;
+    min-width: 0;
+    max-width: 180px;
   }
-
 
   header {
     top: 12px;
     width: 94%;
     height: 56px;
-    padding: 0 1rem;
+    padding: 0 0.35rem 0 1.1rem;
   }
 
   .hero-logo {
-    width: 175px;
+    width: 220px;
   }
 
   .hero-content .title {
@@ -2277,8 +2888,9 @@ footer {
   }
 
   .btn {
-    padding: 0.75rem 1.3rem;
-    font-size: 0.66rem;
+    min-height: 48px;
+    padding: 0 1.5rem;
+    font-size: 0.68rem;
   }
 
   .port-row {
@@ -2336,16 +2948,44 @@ footer {
   }
 }
 
-@media (max-width: 480px) {
-  .track {
-    grid-template-columns: 1.8rem 1fr auto;
-    gap: 0.75rem;
-    padding: 0.6rem 0.7rem;
+/* === MOBILE SECTION BLUR === one section at a time (script.js toggles
+   .is-blurred). The layer sits behind the content: it blurs the starfield,
+   not the text. */
+@media (max-width: 768px) {
+  main > section {
+    position: relative;
+    isolation: isolate;
   }
 
+  main > section.is-blurred::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(3, 3, 4, 0.5);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: -1;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 480px) {
   .player-toggle {
     width: 52px;
     height: 52px;
+  }
+
+  /* Tight phones: drop the thumbnail so the title keeps room in the pill. */
+  .player-bar {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "prev info play next"
+      "seek seek seek seek";
+    gap: 0.2rem 0.55rem;
+  }
+
+  .player-bar .now-cover {
+    display: none;
   }
 
   .ab-bar:nth-child(n+41) {
@@ -2353,11 +2993,11 @@ footer {
   }
 
   .ab-visual {
-    padding: 2.4rem 0.7rem 0.8rem;
+    padding: 1.2rem 0.8rem 6rem;
   }
 
   .hero-logo {
-    width: 150px;
+    width: 190px;
   }
 
   .port-grid {
@@ -2365,16 +3005,14 @@ footer {
     gap: 0.5rem;
   }
 
-  .section-title::before {
-    width: 18px;
-    margin-right: 0.6rem;
+  .btn {
+    padding: 0 1.25rem;
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
   }
 
-  .btn {
-    padding: 0.7rem 1.1rem;
-    font-size: 0.62rem;
-    letter-spacing: 0.12em;
-    margin: 0 3px;
+  .hero-actions {
+    gap: 0.6rem;
   }
 
   .filter-btn {
@@ -2411,6 +3049,17 @@ footer {
   .ab-bar {
     animation: none !important;
   }
+
+  /* A/B: no sweep, no pulse ring; the tab highlight jumps instantly. */
+  .ab-visual::after,
+  .player-toggle::before {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
+  .ab-tabs-ink {
+    transition: none !important;
+  }
 }
 /* ==========================================================================
    DARKER GROUND + STARFIELD
@@ -2444,15 +3093,6 @@ body {
 body::after {
   background-image:
     radial-gradient(120% 90% at 50% 50%, transparent 45%, rgba(0, 0, 0, 0.75) 100%);
-}
-
-/* Header faceplate darker, no warm cast */
-header {
-  background: rgba(6, 6, 8, 0.88);
-}
-
-header.is-scrolled {
-  background: rgba(3, 3, 4, 0.95);
 }
 
 /* --- Stars: two tiled layers, different tile sizes so the repeat isn't visible --- */

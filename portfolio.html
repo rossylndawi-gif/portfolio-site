@@ -38,18 +38,19 @@
 
   <!-- Mobile Nav Overlay -->
   <div class="mobile-nav" id="mobile-nav">
-    <a href="index.html#services">services</a>
-    <a href="portfolio.html" aria-current="page">portfolio</a>
-    <a href="index.html#sounds">sounds</a>
-    <a href="index.html#before-after">before/after</a>
-    <a href="index.html#trusted">clients</a>
-    <a href="index.html#about">about</a>
-    <a href="index.html#contact">contact</a>
+    <a href="index.html#services" style="--i:0">services</a>
+    <a href="portfolio.html" aria-current="page" style="--i:1">portfolio</a>
+    <a href="index.html#sounds" style="--i:2">sounds</a>
+    <a href="index.html#before-after" style="--i:3">before/after</a>
+    <a href="index.html#trusted" style="--i:4">clients</a>
+    <a href="index.html#about" style="--i:5">about</a>
+    <a href="index.html#contact" style="--i:6">contact</a>
   </div>
 
   <!-- Header -->
   <header>
-    <a href="index.html" class="logo-txt" style="text-decoration: none; color: inherit;">by<span> Ocompos</span></a>
+    <a href="index.html" class="logo-txt" aria-label="by Ocompos" style="text-decoration: none; color: inherit;"><span
+        class="logo-by">by</span><span class="logo-name">Ocompos</span></a>
     <nav aria-label="main">
       <a href="index.html#services">services</a>
       <a href="portfolio.html" aria-current="page">portfolio</a>
@@ -610,21 +611,25 @@
   </main>
 
   <!-- Video Modal -->
-  <div id="video-modal" class="modal" role="dialog" aria-modal="true" aria-label="video player">
+  <div id="video-modal" class="modal" role="dialog" aria-modal="true" aria-label="video player" data-lenis-prevent>
     <div class="modal-content">
       <button class="close-modal" type="button" aria-label="close">&times;</button>
       <iframe src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="script.js"></script>
+  <!-- === MOTION LIBRARIES (optional: script.js falls back when absent) === -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 
   <script>
     // ============================================
     // CATEGORY FILTERING LOGIC & URL SYNC
+    // Runs before script.js so the GSAP grid reveal sees which cards are hidden.
     // ============================================
-    document.addEventListener('DOMContentLoaded', () => {
+    (() => {
       const filterBtns = document.querySelectorAll('.filter-btn');
       const cards = document.querySelectorAll('.work-card');
 
@@ -658,10 +663,15 @@
           const newUrl = new URL(window.location);
           newUrl.searchParams.set('category', cat);
           window.history.replaceState({}, '', newUrl);
+          // Grid height changed: re-measure trigger positions below it.
+          if (window.ScrollTrigger) ScrollTrigger.refresh();
         });
       });
-    });
+    })();
   </script>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
 </body>
 
 </html>

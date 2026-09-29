@@ -52,18 +52,20 @@
 
   <!-- Mobile Nav Overlay -->
   <div class="mobile-nav" id="mobile-nav">
-    <a href="#services">services</a>
-    <a href="#portfolio">portfolio</a>
-    <a href="#sounds">sounds</a>
-    <a href="#before-after">before/after</a>
-    <a href="#trusted">clients</a>
-    <a href="#about">about</a>
-    <a href="#contact">contact</a>
+    <a href="#services" style="--i:0">services</a>
+    <a href="#sounds" style="--i:1">sounds</a>
+    <a href="#before-after" style="--i:2">before/after</a>
+    <a href="#trusted" style="--i:3">clients</a>
+    <a href="#about" style="--i:4">about</a>
+    <a href="#contact" style="--i:5">contact</a>
   </div>
 
   <!-- Header -->
   <header>
-    <div class="logo-txt">by<span> Ocompos</span></div>
+    <div class="logo-txt">
+      <span class="logo-by" aria-hidden="true">by</span><span class="logo-name" aria-hidden="true">Ocompos</span>
+      <span class="sr-only">by Ocompos</span>
+    </div>
     <nav aria-label="main">
       <a href="#services">Services</a>
       <a href="#sounds">Playlist</a>
@@ -85,11 +87,14 @@
         <!-- Starry background -->
         <div class="stars"></div>
 
-        <!-- 3D Content -->
+        <!-- .hero-fade: GSAP mobile fade. .hero-content: JS 3D tilt (desktop). Never the same element. -->
+        <div class="hero-fade">
         <div class="hero-content" id="heroContent">
-          <!-- Centered Hero Logo -->
+          <!-- Centered Hero Logo: GSAP animates .hero-logo-wrap; CSS hover stays on .hero-logo -->
           <div class="hero-logo-container">
-            <img src="resource/logo-remove" alt="ByOcompos Logo" class="hero-logo" />
+            <div class="hero-logo-wrap">
+              <img src="resource/logo-remove.png" alt="ByOcompos Logo" class="hero-logo" />
+            </div>
           </div>
 
           <h1 class="title">
@@ -98,29 +103,79 @@
 
           <p class="subtitle">Recording • Mix • Mastering </p>
 
-          <div>
-            <a href="#sounds" class="btn btn-filled">My Work</a>
-            <a href="#contact" class="btn btn-outline">Session</a>
+          <!-- GSAP animates .hero-actions; .btn keeps its CSS hover lift -->
+          <div class="hero-actions">
+            <a href="#sounds" class="btn btn-filled">
+              <svg class="btn-icon-lead" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z" /></svg>
+              <span>My Work</span>
+            </a>
+            <a href="#contact" class="btn btn-outline" data-scroll-to-contact>
+              <span>Session</span>
+              <svg class="btn-icon-trail" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
+            </a>
           </div>
+        </div>
         </div>
       </div>
     </section>
 
     <!-- Services -->
     <section id="services">
-      <h2 class="section-title reveal">services</h2>
+      <h2 class="section-title">services</h2>
+      <!-- .svc-cell owns the scroll reveal; .svc-item owns the hover transform. -->
       <div class="svc-grid">
-        <div class="svc-item reveal">
-          <h3>Recording</h3>
-          <p>Focused studio sessions that capture a clean, confident take the first time.</p>
+        <div class="svc-cell reveal">
+          <article class="svc-item">
+            <span class="svc-index" aria-hidden="true">01</span>
+            <svg class="svc-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <rect x="9" y="2.5" width="6" height="11.5" rx="3" />
+              <path d="M5.5 11a6.5 6.5 0 0 0 13 0" />
+              <path d="M12 17.5V21" />
+              <path d="M8.5 21h7" />
+            </svg>
+            <h3>Recording</h3>
+            <p>Focused studio sessions that capture a clean, confident take the first time.</p>
+          </article>
         </div>
-        <div class="svc-item reveal">
-          <h3>Mixing</h3>
-          <p>Balance, depth and punch: a mix that translates on every system and is ready for release.</p>
+        <div class="svc-cell reveal">
+          <article class="svc-item">
+            <span class="svc-index" aria-hidden="true">02</span>
+            <svg class="svc-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M6 3v18M12 3v18M18 3v18" />
+              <rect x="3.5" y="12.5" width="5" height="3" rx="1" fill="currentColor" />
+              <rect x="9.5" y="6" width="5" height="3" rx="1" fill="currentColor" />
+              <rect x="15.5" y="15" width="5" height="3" rx="1" fill="currentColor" />
+            </svg>
+            <h3>Mixing</h3>
+            <p>Balance, depth and punch: a mix that translates on every system and is ready for release.</p>
+          </article>
         </div>
-        <div class="svc-item reveal">
-          <h3>Mastering</h3>
-          <p>Loud, polished and streaming-ready masters for every platform.</p>
+        <div class="svc-cell reveal">
+          <article class="svc-item">
+            <span class="svc-index" aria-hidden="true">03</span>
+            <svg class="svc-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M3 17a9 9 0 0 1 18 0" />
+              <path d="M5.2 11.6l1.3.9M12 8v1.5M18.8 11.6l-1.3.9" />
+              <path d="M12 17l4.2-5.2" />
+              <circle cx="12" cy="17" r="1.2" fill="currentColor" />
+            </svg>
+            <h3>Mastering</h3>
+            <p>Loud, polished and streaming-ready masters for every platform.</p>
+          </article>
+        </div>
+        <div class="svc-cell reveal">
+          <article class="svc-item">
+            <span class="svc-index" aria-hidden="true">04</span>
+            <svg class="svc-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M2 12h2.5l2-5 3 11 3-14 3 16 2.5-8H22" />
+            </svg>
+            <h3>Sound Design</h3>
+            <p>Custom sound design, foley, ambience and sonic branding for film, ads and artists.</p>
+          </article>
         </div>
       </div>
     </section>
@@ -130,101 +185,121 @@
     <!-- ========================================== -->
     <section id="sounds">
       <div class="sec-head reveal">
-        <h2 class="section-title">TOP 10  </h2>
+        <h2 class="section-title">TOP SONGS  </h2>
         <p class="sec-desc">Favorite  projects I've recorded, mixed and mastered.</p>
       </div>
 
       <div class="player reveal" data-player>
-        <div class="player-main">
-          <button class="player-toggle" type="button" aria-label="play" disabled>
-            <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-            <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
-          </button>
-          <div class="player-info">
-            <p class="now-title">track</p>
-            <p class="now-meta">&nbsp;</p>
-            <div class="seek-row">
-              <time class="t-cur">0:00</time>
-              <input class="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="seek" disabled />
-              <time class="t-dur">0:00</time>
-            </div>
-          </div>
-        </div>
+        <!-- Soft light behind the glass; takes the active track's cover when it has one. -->
+        <div class="player-ambient" aria-hidden="true"></div>
 
-        <ol class="playlist">
-          <li style="--i:1;">
+        <!-- 3D card carousel. To show artwork, set data-cover="resource/your-cover.jpg" on a track;
+             empty data-cover keeps the plain placeholder. -->
+        <ol class="playlist" aria-label="tracks">
+          <li>
             <button class="track" type="button" data-audio="resource/audio/track-01.mp3" data-title="Track title 01"
-              data-meta="Mix &amp; Master · Afrobeat" data-year="2025">
+              data-meta="Mix &amp; Master · Afrobeat" data-year="2025" data-cover="">
+              <span class="track-cover" aria-hidden="true"></span>
               <span class="track-num">01</span>
               <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
               <span class="track-text">
                 <span class="track-title">Track title 01</span>
+                <span class="track-year">2025</span>
                 <span class="track-meta">Mix &amp; Master · Afrobeat</span>
               </span>
-              <span class="track-year">2025</span>
             </button>
           </li>
-          <li style="--i:2;">
+          <li>
             <button class="track" type="button" data-audio="resource/audio/track-02.mp3" data-title="Track title 02"
-              data-meta="Mix · Drill" data-year="2025">
+              data-meta="Mix · Drill" data-year="2025" data-cover="">
+              <span class="track-cover" aria-hidden="true"></span>
               <span class="track-num">02</span>
               <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
               <span class="track-text">
                 <span class="track-title">Track title 02</span>
+                <span class="track-year">2025</span>
                 <span class="track-meta">Mix · Drill</span>
               </span>
-              <span class="track-year">2025</span>
             </button>
           </li>
-          <li style="--i:3;">
+          <li>
             <button class="track" type="button" data-audio="resource/audio/track-03.mp3" data-title="Track title 03"
-              data-meta="Recording · Rap" data-year="2025">
+              data-meta="Recording · Rap" data-year="2025" data-cover="">
+              <span class="track-cover" aria-hidden="true"></span>
               <span class="track-num">03</span>
               <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
               <span class="track-text">
                 <span class="track-title">Track title 03</span>
+                <span class="track-year">2025</span>
                 <span class="track-meta">Recording · Rap</span>
               </span>
-              <span class="track-year">2025</span>
             </button>
           </li>
-          <li style="--i:4;">
+          <li>
             <button class="track" type="button" data-audio="resource/audio/track-04.mp3" data-title="Track title 04"
-              data-meta="Mastering · R&amp;B" data-year="2024">
+              data-meta="Mastering · R&amp;B" data-year="2024" data-cover="">
+              <span class="track-cover" aria-hidden="true"></span>
               <span class="track-num">04</span>
               <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
               <span class="track-text">
                 <span class="track-title">Track title 04</span>
+                <span class="track-year">2024</span>
                 <span class="track-meta">Mastering · R&amp;B</span>
               </span>
-              <span class="track-year">2024</span>
             </button>
           </li>
-          <li style="--i:5;">
+          <li>
             <button class="track" type="button" data-audio="resource/audio/track-05.mp3" data-title="Track title 05"
-              data-meta="Mix &amp; Master · Trap" data-year="2024">
+              data-meta="Mix &amp; Master · Trap" data-year="2024" data-cover="">
+              <span class="track-cover" aria-hidden="true"></span>
               <span class="track-num">05</span>
               <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
               <span class="track-text">
                 <span class="track-title">Track title 05</span>
+                <span class="track-year">2024</span>
                 <span class="track-meta">Mix &amp; Master · Trap</span>
               </span>
-              <span class="track-year">2024</span>
             </button>
           </li>
-          <li style="--i:6;">
+          <li>
             <button class="track" type="button" data-audio="resource/audio/track-06.mp3" data-title="Track title 06"
-              data-meta="Mix · Afrobeat" data-year="2024">
+              data-meta="Mix · Afrobeat" data-year="2024" data-cover="">
+              <span class="track-cover" aria-hidden="true"></span>
               <span class="track-num">06</span>
               <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
               <span class="track-text">
                 <span class="track-title">Track title 06</span>
+                <span class="track-year">2024</span>
                 <span class="track-meta">Mix · Afrobeat</span>
               </span>
-              <span class="track-year">2024</span>
             </button>
           </li>
         </ol>
+
+        <!-- Floating transport pill -->
+        <div class="player-bar glass">
+          <button class="player-skip" type="button" data-skip="-1" aria-label="previous track">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+          </button>
+          <span class="now-cover" aria-hidden="true"></span>
+          <div class="player-info">
+            <p class="now-title">track</p>
+            <p class="now-meta">&nbsp;</p>
+          </div>
+          <button class="player-toggle" type="button" aria-label="play" disabled>
+            <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+            <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
+          </button>
+          <button class="player-skip" type="button" data-skip="1" aria-label="next track">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+          </button>
+          <div class="seek-row">
+            <time class="t-cur">0:00</time>
+            <input class="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="seek" disabled />
+            <time class="t-dur">0:00</time>
+          </div>
+        </div>
+        <div class="player-dots" aria-hidden="true"></div>
         <p class="sr-only" aria-live="polite" data-player-status></p>
       </div>
     </section>
@@ -241,34 +316,43 @@
       </div>
 
       <div class="ab reveal" data-ab>
+        <!-- Soft light for the glass toolbar, caption and transport to blur. -->
+        <div class="ab-ambient" aria-hidden="true"></div>
+
+        <!-- Glass pill chips, one per comparison track (built by script.js). -->
         <div class="ab-tabs" role="tablist" aria-label="comparison tracks"></div>
 
         <div class="ab-pair" data-before="resource/audio/before-1.mp3" data-after="resource/audio/after-1.mp3"
-          data-title="Track one"></div>
-        
+          data-title="CARTY ATTENTAT"></div>
 
         <div class="ab-stage">
-          <div class="ab-visual" aria-hidden="true">
-            <span class="ab-label">RAW / ORIGINAL</span>
-            <div class="ab-bars"></div>
+          <!-- The "artwork" card: mirrored waveform (click to seek) + caption strip with play -->
+          <div class="ab-visual">
+            <div class="ab-bars" aria-hidden="true"></div>
+            <div class="ab-caption">
+              <button class="player-toggle ab-play" type="button" aria-label="play" disabled>
+                <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
+              </button>
+              <span class="ab-caption-title">CARTY ATTENTAT</span>
+              <span class="ab-time" aria-live="off">0:00 / –:––</span>
+              <span class="ab-label">RAW / ORIGINAL</span>
+            </div>
           </div>
 
-          <div class="ab-controls">
-            <button class="player-toggle ab-play" type="button" aria-label="play" disabled>
-              <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-              <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
-            </button>
-            <div class="seek-row">
-              <time class="t-cur">0:00</time>
-              <input class="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="seek" disabled />
-              <time class="t-dur">0:00</time>
-            </div>
-            <div class="ab-toggle" role="group" aria-label="version">
-              <button type="button" class="ab-opt" data-side="raw" aria-pressed="true">A — raw</button>
-              <button type="button" class="ab-opt" data-side="final" aria-pressed="false">B — final</button>
-            </div>
+          <!-- Before / After switch -->
+          <div class="ab-toggle" role="group" aria-label="version">
+            <button type="button" class="ab-opt" data-side="raw" aria-pressed="true">Before</button>
+            <button type="button" class="ab-opt" data-side="final" aria-pressed="false">After</button>
           </div>
-          <p class="ab-note" data-ab-status>loading…</p>
+
+          <!-- Hidden: script.js still drives these; the waveform shows progress instead. -->
+          <div class="seek-row" hidden>
+            <time class="t-cur">0:00</time>
+            <input class="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="seek" disabled />
+            <time class="t-dur">0:00</time>
+          </div>
+          <p class="ab-note" data-ab-status hidden>loading…</p>
         </div>
       </div>
     </section>
@@ -287,9 +371,7 @@
             I ensure your project isn't just heard, but felt. From local artists to international
             labels, every frequency is treated with surgical intent.
           </p>
-          <!-- Pre-filled mailto -->
-          <a href="mailto:contact@byocompos.com?subject=Inquiry:%20Free%20Quote&body=Hi%20Ocompos,%0A%0AI'm%20interested%20in%20your%20services.%20Here%20are%20the%20details%20of%20my%20project:%0A%0A"
-            class="glass-btn hover-scale">Record with us</a>
+          <a href="#contact" class="glass-btn hover-scale" data-scroll-to-contact>Record with us</a>
         </div>
       </div>
     </section>
@@ -599,6 +681,41 @@
         <button type="submit" class="glass-btn hover-scale"
           style="width: 100%; border: none; cursor: pointer; text-align: center;">send message</button>
       </form>
+
+      <!-- === SOCIAL ACTIONS === Brand marks: Simple Icons (CC0). Buttons whose href still contains
+           "REPLACE_WITH" are hidden by script.js until a real URL is set. -->
+      <nav class="social-row reveal" aria-label="Social links">
+        <a class="glass-btn social-btn" href="https://wa.me/250791207108" target="_blank" rel="noopener noreferrer"
+          aria-label="WhatsApp (opens in new tab)">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+          </svg>
+          <span>WhatsApp</span>
+        </a>
+        <a class="glass-btn social-btn" href="https://www.snapchat.com/add/alaindongjr" target="_blank"
+          rel="noopener noreferrer" aria-label="Snapchat (opens in new tab)">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015h-.149c-1.468 0-2.427-.675-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.15-.055-.225-.015-.243.165-.465.42-.509 3.264-.54 4.73-3.879 4.791-4.02l.016-.029c.18-.345.224-.645.119-.869-.195-.434-.884-.658-1.332-.809-.121-.029-.24-.074-.346-.119-1.107-.435-1.257-.93-1.197-1.273.09-.479.674-.793 1.168-.793.146 0 .27.029.383.074.42.194.789.3 1.104.3.234 0 .384-.06.465-.105l-.046-.569c-.098-1.626-.225-3.651.307-4.837C7.392 1.077 10.739.807 11.727.807l.419-.015h.06z" />
+          </svg>
+          <span>Snapchat</span>
+        </a>
+        <!-- TODO: Replace with real Spotify playlist ID -->
+        <a class="glass-btn social-btn" href="https://open.spotify.com/playlist/REPLACE_WITH_REAL_PLAYLIST_ID"
+          target="_blank" rel="noopener noreferrer" aria-label="Spotify (opens in new tab)">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
+          </svg>
+          <span>Spotify</span>
+        </a>
+        <!-- TODO: Replace with real Apple Music playlist URL -->
+        <a class="glass-btn social-btn" href="REPLACE_WITH_REAL_APPLE_MUSIC_URL" target="_blank"
+          rel="noopener noreferrer" aria-label="Apple Music (opens in new tab)">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M23.994 6.124a9.23 9.23 0 00-.24-2.19c-.317-1.31-1.062-2.31-2.18-3.043a5.022 5.022 0 00-1.877-.726 10.496 10.496 0 00-1.564-.15c-.04-.003-.083-.01-.124-.013H5.986c-.152.01-.303.017-.455.026-.747.043-1.49.123-2.193.4-1.336.53-2.3 1.452-2.865 2.78-.192.448-.292.925-.363 1.408-.056.392-.088.785-.1 1.18 0 .032-.007.062-.01.093v12.223c.01.14.017.283.027.424.05.815.154 1.624.497 2.373.65 1.42 1.738 2.353 3.234 2.801.42.127.856.187 1.293.228.555.053 1.11.06 1.667.06h11.03a12.5 12.5 0 001.57-.1c.822-.106 1.596-.35 2.295-.81a5.046 5.046 0 001.88-2.207c.186-.42.293-.87.37-1.324.113-.675.138-1.358.137-2.04-.002-3.8 0-7.595-.003-11.393zm-6.423 3.99v5.712c0 .417-.058.827-.244 1.206-.29.59-.76.962-1.388 1.14-.35.1-.706.157-1.07.173-.95.045-1.773-.6-1.943-1.536a1.88 1.88 0 011.038-2.022c.323-.16.67-.25 1.018-.324.378-.082.758-.153 1.134-.24.274-.063.457-.23.51-.516a.904.904 0 00.02-.193c0-1.815 0-3.63-.002-5.443a.725.725 0 00-.026-.185c-.04-.15-.15-.243-.304-.234-.16.01-.318.035-.475.066-.76.15-1.52.303-2.28.456l-2.325.47-1.374.278c-.016.003-.032.01-.048.013-.277.077-.377.203-.39.49-.002.042 0 .086 0 .13-.002 2.602 0 5.204-.003 7.805 0 .42-.047.836-.215 1.227-.278.64-.77 1.04-1.434 1.233-.35.1-.71.16-1.075.172-.96.036-1.755-.6-1.92-1.544-.14-.812.23-1.685 1.154-2.075.357-.15.73-.232 1.108-.31.287-.06.575-.116.86-.177.383-.083.583-.323.6-.714v-.15c0-2.96 0-5.922.002-8.882 0-.123.013-.25.042-.37.07-.285.273-.448.546-.518.255-.066.515-.112.774-.165.733-.15 1.466-.296 2.2-.444l2.27-.46c.67-.134 1.34-.27 2.01-.403.22-.043.442-.088.663-.106.31-.025.523.17.554.482.008.073.012.148.012.223.002 1.91.002 3.822 0 5.732z" />
+          </svg>
+          <span>Apple Music</span>
+        </a>
+      </nav>
     </section>
 
     <!-- ========================================== -->
@@ -669,12 +786,18 @@
   <!-- ========================================== -->
   <!-- VIDEO MODAL (YouTube) -->
   <!-- ========================================== -->
-  <div id="video-modal" class="modal" role="dialog" aria-modal="true" aria-label="video player">
+  <div id="video-modal" class="modal" role="dialog" aria-modal="true" aria-label="video player" data-lenis-prevent>
     <div class="modal-content">
       <button class="close-modal" type="button" aria-label="close">&times;</button>
       <iframe src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
   </div>
+
+  <!-- === MOTION LIBRARIES (optional: script.js falls back when absent) === -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 
   <script src="script.js"></script>
 
