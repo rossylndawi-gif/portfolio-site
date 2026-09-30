@@ -35,15 +35,10 @@ const hasGsap = !!(window.gsap && window.ScrollTrigger);
 
 if (!reduceMotion && window.Lenis && hasGsap) {
   gsap.registerPlugin(ScrollTrigger);
-  // lerp-based glide: every frame closes 7% of the gap, so the page eases
-  // to a stop instead of snapping. syncTouch gives phones the same glide.
   const lenis = new Lenis({
-    lerp: 0.07,
-    smoothWheel: true,
-    wheelMultiplier: 0.9,
-    syncTouch: true,
-    syncTouchLerp: 0.075,
-    touchInertiaMultiplier: 28
+    duration: 1.1,
+    easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smoothWheel: true
   });
   lenis.on('scroll', ScrollTrigger.update);
   gsap.ticker.add(t => lenis.raf(t * 1000));
