@@ -565,8 +565,82 @@ header nav a[aria-current] {
 
 /* GSAP (desktop pin timeline) owns this wrapper; hover stays on .hero-logo. */
 .hero-logo-wrap {
+  position: relative;
   display: flex;
   justify-content: center;
+}
+
+.hero-logo-wrap picture {
+  position: relative;
+  z-index: 2;
+}
+
+/* Soft light behind the logo. script.js moves it with the pointer / finger
+   (--gx / --gy) and flares it on touch (.is-lit). */
+.hero-glow {
+  --gx: 50%;
+  --gy: 50%;
+  position: absolute;
+  inset: -45% -20%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(28% 42% at var(--gx) var(--gy), rgba(235, 240, 250, 0.22), transparent 70%),
+    radial-gradient(55% 60% at 50% 50%, rgba(163, 173, 187, 0.12), transparent 72%);
+  filter: blur(12px);
+  opacity: 0.75;
+  transition: opacity 0.5s ease, transform 0.6s var(--ease);
+  animation: hero-glow-breathe 5s ease-in-out infinite;
+}
+
+.hero-glow.is-lit {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+@keyframes hero-glow-breathe {
+  0%, 100% { filter: blur(12px) brightness(0.9); }
+  50%      { filter: blur(14px) brightness(1.2); }
+}
+
+/* Twinkling four-point stars scattered around the logo. */
+.hero-sparkles {
+  position: absolute;
+  inset: -22% -8%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero-sparkles i {
+  position: absolute;
+  width: var(--s, 10px);
+  height: var(--s, 10px);
+  margin: calc(var(--s, 10px) / -2) 0 0 calc(var(--s, 10px) / -2);
+  background: #fff;
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
+  opacity: 0;
+  transform: scale(0.2) rotate(0deg);
+  animation: sparkle var(--d, 3s) ease-in-out var(--delay, 0s) infinite;
+}
+
+.hero-sparkles i.dot {
+  clip-path: circle(50%);
+  --s: 3px;
+}
+
+.hero-sparkles i.burst {
+  animation: sparkle-burst 0.9s ease-out forwards;
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.2) rotate(0deg); }
+  50%      { opacity: 1; transform: scale(1) rotate(45deg); }
+}
+
+@keyframes sparkle-burst {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.2) rotate(90deg); }
 }
 
 .hero-logo {
@@ -584,7 +658,7 @@ header nav a[aria-current] {
   transform: scale(1.03);
   filter:
     drop-shadow(0 16px 34px rgba(0, 0, 0, 0.8))
-    drop-shadow(0 0 40px rgba(255, 122, 24, 0.4));
+    drop-shadow(0 0 40px rgba(220, 228, 240, 0.35));
 }
 
 .hero-content .title {
@@ -1561,7 +1635,21 @@ section {
     rotateY(calc(var(--offset) * 24deg))
     scale(calc(1 - var(--abs) * 0.12));
   opacity: calc(1 - var(--abs) * 0.3);
-  transition: transform 0.6s var(--ease), opacity 0.45s ease;
+  transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease;
+  will-change: transform;
+}
+
+/* While a finger / mouse drags the carousel, cards follow it 1:1. */
+.playlist {
+  cursor: grab;
+}
+
+.playlist.is-dragging {
+  cursor: grabbing;
+}
+
+.playlist.is-dragging > li {
+  transition: none;
 }
 
 .playlist > li.is-far {
@@ -1749,10 +1837,10 @@ section {
 .player-bar {
   position: relative;
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas:
-    "prev cover info play next"
-    "seek seek  seek seek seek";
+    "cover info play"
+    "seek  seek seek";
   align-items: center;
   gap: 0.2rem 0.8rem;
   width: 100%;
@@ -1762,11 +1850,9 @@ section {
   border-radius: var(--radius-2xl);
 }
 
-.player-bar .player-skip[data-skip="-1"] { grid-area: prev; }
 .player-bar .now-cover { grid-area: cover; }
 .player-bar .player-info { grid-area: info; }
 .player-bar .player-toggle { grid-area: play; width: 52px; height: 52px; }
-.player-bar .player-skip[data-skip="1"] { grid-area: next; }
 .player-bar .seek-row { grid-area: seek; padding: 0 0.4rem; }
 
 /* Round glass icon buttons (prev / next). */
@@ -1947,6 +2033,11 @@ section {
 .ab-tab[aria-selected="true"] {
   color: var(--text-primary);
   background: transparent;
+}
+
+/* One comparison track: the caption already names it, so no tab bar. */
+.ab-tabs.is-single {
+  display: none;
 }
 
 .ab-tab-note:empty {
@@ -2406,13 +2497,14 @@ section {
 
 .trusted-title {
   margin-bottom: 3rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.9rem, 4.6vw, 2.8rem);
-  font-weight: 800;
-  text-transform: uppercase;
+  font-family: var(--font-script);
+  font-size: clamp(2.6rem, 7vw, 4.2rem);
+  font-weight: 400;
+  text-transform: none;
   color: var(--text-primary);
-  letter-spacing: -0.035em;
-  line-height: 1.1;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-shadow: 0 0 24px rgba(163, 173, 187, 0.25);
 }
 
 /* Class name is legacy ("purple"); the accent is amber now. */
@@ -3037,6 +3129,12 @@ footer {
   .hero-container .hero-content {
     transform: none !important;
     transition: none !important;
+  }
+
+  .hero-sparkles i {
+    animation: none !important;
+    opacity: 0.6;
+    transform: none;
   }
 
   body::before {

@@ -758,6 +758,81 @@ if (container && content && !reduceMotion) {
 }
 
 // ============================================
+// 12b. HERO LOGO SPARKLES + REACTIVE GLOW
+// Stars twinkle on a ring around the logo. The glow behind it follows the
+// pointer / finger and flares on touch, throwing off a small star burst.
+// ============================================
+const logoWrap = document.querySelector('.hero-logo-wrap');
+const sparkleLayer = logoWrap && logoWrap.querySelector('.hero-sparkles');
+const heroGlow = logoWrap && logoWrap.querySelector('.hero-glow');
+if (logoWrap && sparkleLayer) {
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const COUNT = matchMedia('(max-width: 768px)').matches ? 26 : 40;
+  for (let k = 0; k < COUNT; k++) {
+    const star = document.createElement('i');
+    // Place on an elliptical band around the logo, never over its centre.
+    const angle = rand(0, Math.PI * 2);
+    const radius = rand(0.62, 1);
+    const x = 50 + Math.cos(angle) * 50 * radius;
+    const y = 50 + Math.sin(angle) * 50 * radius;
+    if (k % 3 === 0) star.className = 'dot';
+    else star.style.setProperty('--s', rand(8, 18).toFixed(1) + 'px');
+    star.style.left = x.toFixed(2) + '%';
+    star.style.top = y.toFixed(2) + '%';
+    star.style.setProperty('--d', rand(2.2, 4.5).toFixed(2) + 's');
+    star.style.setProperty('--delay', (-rand(0, 4.5)).toFixed(2) + 's');
+    sparkleLayer.appendChild(star);
+  }
+
+  if (heroGlow && !reduceMotion) {
+    const hero = document.querySelector('.hero-container') || logoWrap;
+    const moveGlow = (clientX, clientY) => {
+      const r = heroGlow.getBoundingClientRect();
+      const gx = Math.max(10, Math.min(90, ((clientX - r.left) / r.width) * 100));
+      const gy = Math.max(15, Math.min(85, ((clientY - r.top) / r.height) * 100));
+      heroGlow.style.setProperty('--gx', gx.toFixed(1) + '%');
+      heroGlow.style.setProperty('--gy', gy.toFixed(1) + '%');
+    };
+    const burst = (clientX, clientY) => {
+      const r = sparkleLayer.getBoundingClientRect();
+      const x = clientX - r.left;
+      const y = clientY - r.top;
+      for (let k = 0; k < 8; k++) {
+        const s = document.createElement('i');
+        s.className = 'burst';
+        const a = (k / 8) * Math.PI * 2 + rand(-0.3, 0.3);
+        const dist = rand(40, 90);
+        s.style.left = x + 'px';
+        s.style.top = y + 'px';
+        s.style.setProperty('--s', rand(6, 12).toFixed(1) + 'px');
+        s.style.setProperty('--tx', (Math.cos(a) * dist).toFixed(1) + 'px');
+        s.style.setProperty('--ty', (Math.sin(a) * dist).toFixed(1) + 'px');
+        s.addEventListener('animationend', () => s.remove(), { once: true });
+        sparkleLayer.appendChild(s);
+      }
+    };
+    let litTimer = 0;
+    const light = () => {
+      heroGlow.classList.add('is-lit');
+      clearTimeout(litTimer);
+      litTimer = setTimeout(() => heroGlow.classList.remove('is-lit'), 700);
+    };
+    hero.addEventListener('pointermove', (e) => moveGlow(e.clientX, e.clientY), { passive: true });
+    hero.addEventListener('pointerdown', (e) => {
+      moveGlow(e.clientX, e.clientY);
+      light();
+      const lr = logoWrap.getBoundingClientRect();
+      if (e.clientX > lr.left - 60 && e.clientX < lr.right + 60 &&
+          e.clientY > lr.top - 60 && e.clientY < lr.bottom + 60) burst(e.clientX, e.clientY);
+    }, { passive: true });
+    hero.addEventListener('pointerleave', () => {
+      heroGlow.style.setProperty('--gx', '50%');
+      heroGlow.style.setProperty('--gy', '50%');
+    });
+  }
+}
+
+// ============================================
 // 13. KEYBOARD ACCESS FOR CLICKABLE CARDS
 // Video tiles and cover tiles are <div>/<article> elements with click
 // handlers or inline onclick. Make them focusable and operable with
@@ -825,7 +900,6 @@ if (playerEl) {
   const tracks = Array.from(playerEl.querySelectorAll('.track'));
   const playlistEl = playerEl.querySelector('.playlist');
   const slots = tracks.map(t => t.closest('li'));
-  const skipBtns = Array.from(playerEl.querySelectorAll('.player-skip'));
   const nowCover = playerEl.querySelector('.now-cover');
   const ambient = playerEl.querySelector('.player-ambient');
   const dotsEl = playerEl.querySelector('.player-dots');
@@ -877,26 +951,23 @@ if (playerEl) {
 
   const browsing = () => available === 0 || index === -1;
 
-  const updateSkips = () => {
-    skipBtns.forEach(b => {
-      b.disabled = browsing() ? n < 2 : availableFrom(index, Number(b.dataset.skip)) === -1;
-    });
-  };
-
-  const positionCards = () => {
+  // `drag` is a fractional card count while the carousel is being dragged,
+  // so the cards follow the finger instead of jumping one step at a time.
+  const positionCards = (drag = 0) => {
     slots.forEach((li, j) => {
       let offset = wrap(j - view);
       if (offset > n / 2) offset -= n;
+      offset -= drag;
       const abs = Math.abs(offset);
       // A card wrapping from one end to the other would fly across the stage
       // behind the others; place it without a transition instead.
       const prev = Number(li.dataset.offset);
-      const jump = li.dataset.offset !== undefined && Math.abs(offset - prev) > 2;
+      const jump = !drag && li.dataset.offset !== undefined && Math.abs(offset - prev) > 2;
       if (jump) li.style.transition = 'none';
       li.style.setProperty('--offset', offset);
       li.style.setProperty('--abs', Math.min(abs, 3));
-      li.style.zIndex = String(10 - abs);
-      li.classList.toggle('is-far', abs > 2);
+      li.style.zIndex = String(10 - Math.round(abs));
+      li.classList.toggle('is-far', abs > 2.5);
       li.dataset.offset = offset;
       if (jump) {
         void li.offsetWidth;
@@ -904,7 +975,6 @@ if (playerEl) {
       }
     });
     dots.forEach((d, j) => d.classList.toggle('is-active', j === view));
-    updateSkips();
   };
 
   // <audio> stays the source of truth. Playback eases the playhead; user
@@ -1036,8 +1106,6 @@ if (playerEl) {
     if (wasPlaying) play();
   };
 
-  skipBtns.forEach(b => b.addEventListener('click', () => step(Number(b.dataset.skip))));
-
   if (playlistEl) {
     playlistEl.addEventListener('keydown', (e) => {
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
@@ -1047,36 +1115,72 @@ if (playerEl) {
       if (centre && !centre.disabled) centre.focus({ preventScroll: true });
     });
 
-    // Horizontal trackpad / wheel scroll steps through the loop; vertical
-    // scrolling is left alone so the page still scrolls over the carousel.
-    let wheelLockedUntil = 0;
+    // --- Drag / swipe / horizontal wheel: the cards track the gesture
+    // live, then glide to the nearest card on release. ---
+    const spacing = () => (slots[0] ? slots[0].offsetWidth * 0.62 : 200);
+    let drag = 0;
+    let swallowClick = false;
+
+    const settle = (velocity = 0) => {
+      playlistEl.classList.remove('is-dragging');
+      let count = Math.round(drag + velocity * 0.25);
+      count = Math.max(-(n - 1), Math.min(n - 1, count));
+      drag = 0;
+      if (count === 0) { positionCards(); return; }
+      const dir = Math.sign(count);
+      for (let k = 0; k < Math.abs(count); k++) step(dir);
+    };
+
+    const follow = (value) => {
+      drag = Math.max(-(n - 1), Math.min(n - 1, value));
+      playlistEl.classList.add('is-dragging');
+      positionCards(drag);
+    };
+
+    let wheelTimer = 0;
     playlistEl.addEventListener('wheel', (e) => {
-      if (Math.abs(e.deltaX) < 8 || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      if (Math.abs(e.deltaX) < 2 || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
       e.preventDefault();
-      const now = performance.now();
-      if (now < wheelLockedUntil) return;
-      wheelLockedUntil = now + 450;
-      step(e.deltaX > 0 ? 1 : -1);
+      follow(drag + e.deltaX / spacing());
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(() => settle(), 140);
     }, { passive: false });
 
-    // Horizontal swipe / drag (touch-action: pan-y leaves vertical scrolling native).
+    // touch-action: pan-y leaves vertical scrolling native; a vertical
+    // scroll cancels the pointer and the cards spring back.
     let swipe = null;
-    let swallowClick = false;
     playlistEl.addEventListener('pointerdown', (e) => {
-      if (e.button === 0) swipe = { x: e.clientX, y: e.clientY };
+      if (e.button !== 0) return;
+      swipe = { x: e.clientX, y: e.clientY, lastX: e.clientX, lastT: performance.now(), v: 0, active: false };
     });
-    playlistEl.addEventListener('pointercancel', () => { swipe = null; });
-    playlistEl.addEventListener('pointerup', (e) => {
+    window.addEventListener('pointermove', (e) => {
       if (!swipe) return;
       const dx = e.clientX - swipe.x;
       const dy = e.clientY - swipe.y;
+      if (!swipe.active) {
+        if (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(dy)) return;
+        swipe.active = true;
+      }
+      const now = performance.now();
+      const dt = Math.max(1, now - swipe.lastT);
+      swipe.v = (-(e.clientX - swipe.lastX) / spacing()) / dt * 1000;   // cards per second
+      swipe.lastX = e.clientX;
+      swipe.lastT = now;
+      follow(-dx / spacing());
+    });
+    const endSwipe = (cancelled) => {
+      if (!swipe) return;
+      const s = swipe;
       swipe = null;
-      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
-      step(dx < 0 ? 1 : -1);
-      // The swipe also ends in a click on the card under the pointer; drop it.
+      if (!s.active) return;
+      if (cancelled) { drag = 0; playlistEl.classList.remove('is-dragging'); positionCards(); return; }
+      settle(performance.now() - s.lastT > 90 ? 0 : s.v);
+      // The drag also ends in a click on the card under the pointer; drop it.
       swallowClick = true;
       setTimeout(() => { swallowClick = false; }, 0);
-    });
+    };
+    window.addEventListener('pointerup', () => endSwipe(false));
+    window.addEventListener('pointercancel', () => endSwipe(true));
     playlistEl.addEventListener('click', (e) => {
       if (!swallowClick) return;
       swallowClick = false;
@@ -1442,7 +1546,13 @@ if (abEl) {
     createAudio(st);
   });
   tabsEl.appendChild(ink);
-  if ('ResizeObserver' in window) new ResizeObserver(positionInk).observe(tabsEl);
+  tabsEl.classList.toggle('is-single', states.length < 2);
+  // Chips change width when a "soon" note is added; keep the pill fitted.
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(positionInk);
+    ro.observe(tabsEl);
+    states.forEach(st => ro.observe(st.tab));
+  }
 
   playBtn.addEventListener('click', () => {
     if (!active) return;
