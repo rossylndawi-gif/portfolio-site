@@ -282,46 +282,6 @@ Promise.all([preloaderFinished, document.fonts ? document.fonts.ready : null]).t
 });
 
 // ============================================
-// === MOBILE SECTION BLUR === (≤768px) only the section at viewport centre
-// gets the backdrop blur; backdrop-filter everywhere is too heavy on older phones.
-// ============================================
-(() => {
-  if (reduceMotion || !('IntersectionObserver' in window)) return;
-  // On desktop the hero is already wrapped in ScrollTrigger's pin-spacer.
-  const sections = document.querySelectorAll('main > section, main > .pin-spacer > section');
-  if (!sections.length) return;
-  const mq = matchMedia('(max-width: 768px)');
-  let io = null;
-  let current = null;
-
-  const disable = () => {
-    if (io) io.disconnect();
-    io = null;
-    if (current) current.classList.remove('is-blurred');
-    current = null;
-  };
-
-  const enable = () => {
-    io = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting || entry.target === current) return;
-        if (current) current.classList.remove('is-blurred');
-        current = entry.target;
-        current.classList.add('is-blurred');
-      });
-    }, { rootMargin: '-50% 0px -50% 0px' });
-    sections.forEach(s => io.observe(s));
-  };
-
-  const apply = () => {
-    disable();
-    if (mq.matches) enable();
-  };
-  mq.addEventListener('change', apply);
-  apply();
-})();
-
-// ============================================
 // 5. AMBIENT DARK STARFIELD / DUST CANVAS (Optimized)
 // ============================================
 const canvas = document.getElementById('starfield');
@@ -758,78 +718,46 @@ if (container && content && !reduceMotion) {
 }
 
 // ============================================
-// 12b. HERO LOGO SPARKLES + REACTIVE GLOW
-// Stars twinkle on a ring around the logo. The glow behind it follows the
-// pointer / finger and flares on touch, throwing off a small star burst.
+// 12b. HERO LOGO GLOW
+// The soft light behind the logo follows the pointer / finger and flares
+// on touch and while the page is being scrolled.
 // ============================================
-const logoWrap = document.querySelector('.hero-logo-wrap');
-const sparkleLayer = logoWrap && logoWrap.querySelector('.hero-sparkles');
-const heroGlow = logoWrap && logoWrap.querySelector('.hero-glow');
-if (logoWrap && sparkleLayer) {
-  const rand = (a, b) => a + Math.random() * (b - a);
-  const COUNT = matchMedia('(max-width: 768px)').matches ? 26 : 40;
-  for (let k = 0; k < COUNT; k++) {
-    const star = document.createElement('i');
-    // Place on an elliptical band around the logo, never over its centre.
-    const angle = rand(0, Math.PI * 2);
-    const radius = rand(0.62, 1);
-    const x = 50 + Math.cos(angle) * 50 * radius;
-    const y = 50 + Math.sin(angle) * 50 * radius;
-    if (k % 3 === 0) star.className = 'dot';
-    else star.style.setProperty('--s', rand(8, 18).toFixed(1) + 'px');
-    star.style.left = x.toFixed(2) + '%';
-    star.style.top = y.toFixed(2) + '%';
-    star.style.setProperty('--d', rand(2.2, 4.5).toFixed(2) + 's');
-    star.style.setProperty('--delay', (-rand(0, 4.5)).toFixed(2) + 's');
-    sparkleLayer.appendChild(star);
-  }
-
-  if (heroGlow && !reduceMotion) {
-    const hero = document.querySelector('.hero-container') || logoWrap;
-    const moveGlow = (clientX, clientY) => {
-      const r = heroGlow.getBoundingClientRect();
-      const gx = Math.max(10, Math.min(90, ((clientX - r.left) / r.width) * 100));
-      const gy = Math.max(15, Math.min(85, ((clientY - r.top) / r.height) * 100));
-      heroGlow.style.setProperty('--gx', gx.toFixed(1) + '%');
-      heroGlow.style.setProperty('--gy', gy.toFixed(1) + '%');
-    };
-    const burst = (clientX, clientY) => {
-      const r = sparkleLayer.getBoundingClientRect();
-      const x = clientX - r.left;
-      const y = clientY - r.top;
-      for (let k = 0; k < 8; k++) {
-        const s = document.createElement('i');
-        s.className = 'burst';
-        const a = (k / 8) * Math.PI * 2 + rand(-0.3, 0.3);
-        const dist = rand(40, 90);
-        s.style.left = x + 'px';
-        s.style.top = y + 'px';
-        s.style.setProperty('--s', rand(6, 12).toFixed(1) + 'px');
-        s.style.setProperty('--tx', (Math.cos(a) * dist).toFixed(1) + 'px');
-        s.style.setProperty('--ty', (Math.sin(a) * dist).toFixed(1) + 'px');
-        s.addEventListener('animationend', () => s.remove(), { once: true });
-        sparkleLayer.appendChild(s);
-      }
-    };
-    let litTimer = 0;
-    const light = () => {
-      heroGlow.classList.add('is-lit');
-      clearTimeout(litTimer);
-      litTimer = setTimeout(() => heroGlow.classList.remove('is-lit'), 700);
-    };
-    hero.addEventListener('pointermove', (e) => moveGlow(e.clientX, e.clientY), { passive: true });
-    hero.addEventListener('pointerdown', (e) => {
-      moveGlow(e.clientX, e.clientY);
-      light();
-      const lr = logoWrap.getBoundingClientRect();
-      if (e.clientX > lr.left - 60 && e.clientX < lr.right + 60 &&
-          e.clientY > lr.top - 60 && e.clientY < lr.bottom + 60) burst(e.clientX, e.clientY);
-    }, { passive: true });
-    hero.addEventListener('pointerleave', () => {
-      heroGlow.style.setProperty('--gx', '50%');
-      heroGlow.style.setProperty('--gy', '50%');
+const heroGlow = document.querySelector('.hero-logo-wrap .hero-glow');
+if (heroGlow && !reduceMotion) {
+  const hero = document.querySelector('.hero-container') || heroGlow.parentElement;
+  const moveGlow = (clientX, clientY) => {
+    const r = heroGlow.getBoundingClientRect();
+    const gx = Math.max(10, Math.min(90, ((clientX - r.left) / r.width) * 100));
+    const gy = Math.max(15, Math.min(85, ((clientY - r.top) / r.height) * 100));
+    heroGlow.style.setProperty('--gx', gx.toFixed(1) + '%');
+    heroGlow.style.setProperty('--gy', gy.toFixed(1) + '%');
+  };
+  let litTimer = 0;
+  const light = (ms = 700) => {
+    heroGlow.classList.add('is-lit');
+    clearTimeout(litTimer);
+    litTimer = setTimeout(() => heroGlow.classList.remove('is-lit'), ms);
+  };
+  hero.addEventListener('pointermove', (e) => moveGlow(e.clientX, e.clientY), { passive: true });
+  hero.addEventListener('pointerdown', (e) => {
+    moveGlow(e.clientX, e.clientY);
+    light();
+  }, { passive: true });
+  hero.addEventListener('pointerleave', () => {
+    heroGlow.style.setProperty('--gx', '50%');
+    heroGlow.style.setProperty('--gy', '50%');
+  });
+  // Scroll: flare while scrolling, only when the hero is on screen.
+  let glowTicking = false;
+  window.addEventListener('scroll', () => {
+    if (glowTicking) return;
+    glowTicking = true;
+    requestAnimationFrame(() => {
+      glowTicking = false;
+      const r = hero.getBoundingClientRect();
+      if (r.bottom > 0 && r.top < innerHeight) light(400);
     });
-  }
+  }, { passive: true });
 }
 
 // ============================================
