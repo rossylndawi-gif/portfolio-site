@@ -35,10 +35,15 @@ const hasGsap = !!(window.gsap && window.ScrollTrigger);
 
 if (!reduceMotion && window.Lenis && hasGsap) {
   gsap.registerPlugin(ScrollTrigger);
+  // lerp-based glide: every frame closes 7% of the gap, so the page eases
+  // to a stop instead of snapping. syncTouch gives phones the same glide.
   const lenis = new Lenis({
-    duration: 1.1,
-    easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    smoothWheel: true
+    lerp: 0.07,
+    smoothWheel: true,
+    wheelMultiplier: 0.9,
+    syncTouch: true,
+    syncTouchLerp: 0.075,
+    touchInertiaMultiplier: 28
   });
   lenis.on('scroll', ScrollTrigger.update);
   gsap.ticker.add(t => lenis.raf(t * 1000));
@@ -257,7 +262,7 @@ if (hasGsap) {
         gsap.timeline({
           scrollTrigger: { trigger: '.hero', start: 'top top', end: '+=45%', pin: true, scrub: 1 }
         })
-          .to('.hero-logo-wrap', { scale: 0.85, y: -20, opacity: 0.7 }, 0)
+          .to('.hero-logo-wrap', { scale: 0.85, y: -20, opacity: 0.7, rotationX: 28, transformPerspective: 900 }, 0)
           .to('.hero-content .title', { y: -30, opacity: 0 }, 0.1)
           .to('.hero-content .subtitle', { y: -20, opacity: 0 }, 0.15)
           .to('.hero-actions', { y: -10, opacity: 0 }, 0.2);
@@ -267,7 +272,30 @@ if (hasGsap) {
           opacity: 0, y: -30, ease: 'none',
           scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom 40%', scrub: true }
         });
+        // The logo tips back in 3D as it scrolls away.
+        gsap.to('.hero-logo-wrap', {
+          rotationX: 32, scale: 0.9, transformPerspective: 900, ease: 'none',
+          scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom 40%', scrub: true }
+        });
       }
+    }
+
+    // --- Scroll feel: sections lean very slightly with scroll speed and
+    // settle back when the page stops (the hero is pinned, so it is left out). ---
+    const leaners = Array.from(document.querySelectorAll('main > section:not(.hero)'));
+    if (leaners.length) {
+      const skewTo = leaners.map(el => gsap.quickTo(el, 'skewY', { duration: 0.6, ease: 'power3.out' }));
+      ScrollTrigger.create({
+        onUpdate: (self) => {
+          const skew = gsap.utils.clamp(-2.2, 2.2, self.getVelocity() / -450);
+          skewTo.forEach(fn => fn(skew));
+        }
+      });
+      let settle = 0;
+      window.addEventListener('scroll', () => {
+        clearTimeout(settle);
+        settle = setTimeout(() => skewTo.forEach(fn => fn(0)), 120);
+      }, { passive: true });
     }
   });
 }
@@ -714,6 +742,40 @@ if (container && content && !reduceMotion) {
   // Remove transition on mouse enter for smooth follow
   container.addEventListener('mouseenter', () => {
     content.style.transition = 'none';
+  });
+}
+
+// ============================================
+// 12a. HERO LOGO 3D
+// The logo floats with a slow 3D sway; a tap / click spins it a full turn
+// in depth. GSAP owns the <picture> (the wrap belongs to the scroll
+// timeline and the <img> keeps its CSS hover scale).
+// ============================================
+const logo3d = document.querySelector('.hero-logo-wrap picture');
+if (logo3d && hasGsap && !reduceMotion) {
+  gsap.set(logo3d, { transformPerspective: 900, transformStyle: 'preserve-3d' });
+  gsap.to(logo3d, { rotationX: 7, y: -8, duration: 3.2, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+  gsap.fromTo(logo3d, { rotationZ: -1.2 }, { rotationZ: 1.2, duration: 4.6, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+
+  let spinning = false;
+  const spin = () => {
+    if (spinning) return;
+    spinning = true;
+    gsap.timeline({ onComplete: () => { spinning = false; gsap.set(logo3d, { rotationY: 0 }); } })
+      .to(logo3d, { rotationY: '+=360', duration: 1.3, ease: 'power3.inOut' }, 0)
+      .to(logo3d, { scale: 1.12, z: 80, duration: 0.65, ease: 'power2.out' }, 0)
+      .to(logo3d, { scale: 1, z: 0, duration: 0.8, ease: 'back.out(2)' }, 0.65);
+    document.querySelector('.hero-logo-wrap .hero-glow')?.classList.add('is-lit');
+    setTimeout(() => document.querySelector('.hero-logo-wrap .hero-glow')?.classList.remove('is-lit'), 1300);
+  };
+  const logoImg = logo3d.querySelector('img');
+  logoImg.style.cursor = 'pointer';
+  logoImg.setAttribute('role', 'button');
+  logoImg.setAttribute('tabindex', '0');
+  logoImg.setAttribute('aria-label', 'Ocompos — spin logo');
+  logoImg.addEventListener('click', spin);
+  logoImg.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); spin(); }
   });
 }
 
