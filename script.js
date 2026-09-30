@@ -164,7 +164,43 @@ if (hasGsap) {
     // --- Staggered grids: one ScrollTrigger per grid ---
     // Cards hidden by the portfolio filter are left out of the stagger and
     // marked visible so they appear normally when a filter shows them.
-    document.querySelectorAll('.svc-grid, .works-grid').forEach(grid => {
+    // --- Services: cards swing up out of the page as you scroll (scrubbed,
+    // so they follow the scrollbar both ways), then each one "arms": its
+    // glyph draws itself and the signal bar lights. ---
+    document.querySelectorAll('.svc-grid').forEach(grid => {
+      const cells = Array.from(grid.children);
+      cells.forEach(el => { handled.add(el); el.classList.add('active'); });
+      gsap.set(grid, { perspective: 1200 });
+      gsap.fromTo(cells,
+        { opacity: 0, y: 90, rotateX: -38, scale: 0.9, transformOrigin: '50% 100%' },
+        {
+          opacity: 1, y: 0, rotateX: 0, scale: 1, ease: 'power2.out',
+          stagger: desktop ? 0.12 : 0,
+          scrollTrigger: {
+            trigger: grid, start: 'top 92%', end: desktop ? 'top 38%' : 'top 55%', scrub: 0.8
+          }
+        });
+      cells.forEach(cell => {
+        const item = cell.querySelector('.svc-item');
+        const strokes = cell.querySelectorAll('.svc-glyph path, .svc-glyph rect, .svc-glyph circle');
+        strokes.forEach(s => {
+          const len = s.getTotalLength ? s.getTotalLength() : 100;
+          gsap.set(s, { strokeDasharray: len, strokeDashoffset: len });
+        });
+        ScrollTrigger.create({
+          trigger: cell, start: 'top 72%', end: 'bottom 20%',
+          toggleClass: { targets: item, className: 'is-armed' },
+          onEnter: () => gsap.to(strokes, {
+            strokeDashoffset: 0, duration: 1.1, ease: 'power2.inOut', stagger: 0.12, overwrite: true
+          }),
+          onEnterBack: () => gsap.to(strokes, {
+            strokeDashoffset: 0, duration: 1.1, ease: 'power2.inOut', stagger: 0.12, overwrite: true
+          })
+        });
+      });
+    });
+
+    document.querySelectorAll('.works-grid').forEach(grid => {
       const items = Array.from(grid.children);
       items.forEach(el => handled.add(el));
       const shown = items.filter(el => el.offsetParent !== null);
