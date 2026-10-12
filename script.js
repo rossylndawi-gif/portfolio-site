@@ -895,15 +895,26 @@ if (playerEl) {
   });
   const showCover = (btn) => {
     const src = btn && btn.dataset.cover;
-    [nowCover, ambient].forEach(el => {
-      if (!el) return;
-      el.querySelector('img')?.remove();
-      if (src) el.appendChild(coverImg(src));
-    });
+    if (nowCover) {
+      nowCover.querySelector('img')?.remove();
+      if (src) nowCover.appendChild(coverImg(src));
+    }
+    // The glow crossfades: the old cover fades out under the new one.
+    if (ambient) {
+      const current = ambient.querySelector('img:not(.is-out)');
+      if (current && current.getAttribute('src') === src) return;
+      if (current) {
+        current.classList.add('is-out');
+        setTimeout(() => current.remove(), 700);
+      }
+      if (src) ambient.appendChild(coverImg(src));
+    }
   };
 
-  // --- Carousel (endless loop): each slot gets its shortest circular
-  // distance from the centre card; CSS turns --offset / --abs into the 3D layout. ---
+  // --- Carousel: a native horizontal scroller (snap points, the phone's own
+  // momentum). Each card's distance from the centre, in cards, drives the 3D
+  // tilt via --offset / --abs; the card a swipe settles on becomes the track.
+  // Prev / next and autoplay still wrap from the last track to the first. ---
   const n = tracks.length;
   const wrap = (j) => ((j % n) + n) % n;
 
@@ -918,30 +929,32 @@ if (playerEl) {
 
   const browsing = () => available === 0 || index === -1;
 
-  // `drag` is a fractional card count while the carousel is being dragged,
-  // so the cards follow the finger instead of jumping one step at a time.
-  const positionCards = (drag = 0) => {
+  // Scroll position that centres card j, and the distance between card centres
+  // (cards overlap, so that's less than a card width).
+  const scrollFor = (j) => slots[j].offsetLeft + slots[j].offsetWidth / 2 - playlistEl.clientWidth / 2;
+  const pitch = () => (n > 1 ? slots[1].offsetLeft - slots[0].offsetLeft : 1) || 1;
+  // Fractional index of the card currently in the centre.
+  const centredAt = () => (playlistEl.scrollLeft - scrollFor(0)) / pitch();
+  const nearest = () => Math.max(0, Math.min(n - 1, Math.round(centredAt())));
+
+  const layoutCards = () => {
+    const pos = centredAt();
     slots.forEach((li, j) => {
-      let offset = wrap(j - view);
-      if (offset > n / 2) offset -= n;
-      offset -= drag;
+      const offset = j - pos;
       const abs = Math.abs(offset);
-      // A card wrapping from one end to the other would fly across the stage
-      // behind the others; place it without a transition instead.
-      const prev = Number(li.dataset.offset);
-      const jump = !drag && li.dataset.offset !== undefined && Math.abs(offset - prev) > 2;
-      if (jump) li.style.transition = 'none';
-      li.style.setProperty('--offset', offset);
-      li.style.setProperty('--abs', Math.min(abs, 3));
+      li.style.setProperty('--offset', offset.toFixed(3));
+      li.style.setProperty('--abs', Math.min(abs, 3).toFixed(3));
       li.style.zIndex = String(10 - Math.round(abs));
-      li.classList.toggle('is-far', abs > 2.5);
-      li.dataset.offset = offset;
-      if (jump) {
-        void li.offsetWidth;
-        li.style.transition = '';
-      }
     });
-    dots.forEach((d, j) => d.classList.toggle('is-active', j === view));
+    const c = nearest();
+    dots.forEach((d, j) => d.classList.toggle('is-active', j === c));
+  };
+
+  // Bring the `view` card to the centre; the scroll handler redraws the tilt.
+  const positionCards = (smooth = true) => {
+    if (!slots[view]) return;
+    playlistEl.scrollTo({ left: scrollFor(view), behavior: smooth && !reduceMotion ? 'smooth' : 'auto' });
+    layoutCards();
   };
 
   // <audio> stays the source of truth. Playback eases the playhead; user
@@ -1082,109 +1095,77 @@ if (playerEl) {
       if (centre && !centre.disabled) centre.focus({ preventScroll: true });
     });
 
-    // --- Drag / swipe / horizontal wheel: the cards track the gesture
-    // live, then glide to the nearest card on release. ---
-    const spacing = () => (slots[0] ? slots[0].offsetWidth * 0.62 : 200);
-    let drag = 0;
+    // --- Scrolling is native (touch swipe, trackpad, snap). Redraw the tilt
+    // once per frame; when a swipe comes to rest, the centred card becomes
+    // the current track and playback carries on with it. ---
+    let mouse = null;
     let swallowClick = false;
 
-    // Move `count` cards in one go: only the card we land on is loaded, so a
-    // multi-card swipe doesn't fetch audio and swap covers for every card it passes.
-    const jump = (count) => {
-      if (browsing()) {
-        view = wrap(view + count);
-        positionCards();
-        return;
-      }
-      const dir = Math.sign(count);
-      let j = index;
-      for (let k = 0; k < Math.abs(count); k++) {
-        const next = availableFrom(j, dir);
-        if (next === -1) break;
-        j = next;
-      }
-      if (j === index) { positionCards(); return; }
+    const onRest = () => {
+      if (mouse) return;
+      const c = nearest();
+      if (browsing()) { view = c; return; }
+      if (c === index || tracks[c].disabled) return;
       const wasPlaying = !audio.paused;
-      load(j);
+      load(c);
       if (wasPlaying) play();
     };
 
-    // A flick adds at most one extra card, so a quick swipe on a phone moves
-    // one or two cards instead of flying past half the playlist.
-    const settle = (velocity = 0) => {
-      playlistEl.classList.remove('is-dragging');
-      const fling = Math.max(-1, Math.min(1, velocity * 0.25));
-      let count = Math.round(drag + fling);
-      count = Math.max(-(n - 1), Math.min(n - 1, count));
-      drag = 0;
-      if (count === 0) { positionCards(); return; }
-      jump(count);
-    };
-
-    // Pointer events can fire faster than the screen refreshes; lay the
-    // cards out at most once per frame.
     let frame = 0;
-    const follow = (value) => {
-      drag = Math.max(-(n - 1), Math.min(n - 1, value));
-      playlistEl.classList.add('is-dragging');
-      if (!frame) frame = requestAnimationFrame(() => { frame = 0; if (drag) positionCards(drag); });
-    };
+    let restTimer = 0;
+    const hasScrollEnd = 'onscrollend' in window;
+    playlistEl.addEventListener('scroll', () => {
+      if (!frame) frame = requestAnimationFrame(() => { frame = 0; layoutCards(); });
+      if (!hasScrollEnd) {
+        clearTimeout(restTimer);
+        restTimer = setTimeout(onRest, 150);
+      }
+    }, { passive: true });
+    if (hasScrollEnd) playlistEl.addEventListener('scrollend', onRest);
 
-    let wheelTimer = 0;
-    playlistEl.addEventListener('wheel', (e) => {
-      if (Math.abs(e.deltaX) < 2 || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
-      e.preventDefault();
-      follow(drag + e.deltaX / spacing());
-      clearTimeout(wheelTimer);
-      wheelTimer = setTimeout(() => settle(), 140);
-    }, { passive: false });
-
-    // touch-action: pan-y leaves vertical scrolling native; a vertical
-    // scroll cancels the pointer and the cards spring back.
-    let swipe = null;
+    // Mouse drag on desktop (touch and trackpads scroll natively).
     playlistEl.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0) return;
-      swipe = { x: e.clientX, y: e.clientY, lastX: e.clientX, lastT: performance.now(), v: 0, active: false };
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      e.preventDefault();   // no text selection or image ghost-drag
+      mouse = { x: e.clientX, left: playlistEl.scrollLeft, moved: false };
     });
     window.addEventListener('pointermove', (e) => {
-      if (!swipe) return;
-      const dx = e.clientX - swipe.x;
-      const dy = e.clientY - swipe.y;
-      if (!swipe.active) {
-        if (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(dy)) return;
-        swipe.active = true;
+      if (!mouse) return;
+      const dx = e.clientX - mouse.x;
+      if (!mouse.moved) {
+        if (Math.abs(dx) < 6) return;
+        mouse.moved = true;
+        playlistEl.classList.add('is-dragging');
       }
-      const now = performance.now();
-      const dt = Math.max(1, now - swipe.lastT);
-      // Cards per second, smoothed: a single jittery touch sample shouldn't decide the fling.
-      const v = (-(e.clientX - swipe.lastX) / spacing()) / dt * 1000;
-      swipe.v = swipe.v * 0.6 + v * 0.4;
-      swipe.lastX = e.clientX;
-      swipe.lastT = now;
-      follow(-dx / spacing());
+      playlistEl.scrollLeft = mouse.left - dx;
     });
-    const endSwipe = (cancelled) => {
-      if (!swipe) return;
-      const s = swipe;
-      swipe = null;
-      if (!s.active) return;
-      if (cancelled) { drag = 0; playlistEl.classList.remove('is-dragging'); positionCards(); return; }
-      settle(performance.now() - s.lastT > 90 ? 0 : s.v);
+    window.addEventListener('pointerup', () => {
+      if (!mouse) return;
+      const moved = mouse.moved;
+      mouse = null;
+      if (!moved) return;
+      playlistEl.classList.remove('is-dragging');
+      view = nearest();
+      positionCards();
       // The drag also ends in a click on the card under the pointer; drop it.
       swallowClick = true;
       setTimeout(() => { swallowClick = false; }, 0);
-    };
-    window.addEventListener('pointerup', () => endSwipe(false));
-    window.addEventListener('pointercancel', () => endSwipe(true));
+    });
     playlistEl.addEventListener('click', (e) => {
       if (!swallowClick) return;
       swallowClick = false;
       e.preventDefault();
       e.stopPropagation();
     }, true);
+
+    // Card widths follow the viewport; keep the current card centred.
+    let resizeFrame = 0;
+    window.addEventListener('resize', () => {
+      if (!resizeFrame) resizeFrame = requestAnimationFrame(() => { resizeFrame = 0; positionCards(false); });
+    });
   }
 
-  positionCards();
+  positionCards(false);
 
   seek.addEventListener('input', () => {
     const t = parseFloat(seek.value);
