@@ -1938,6 +1938,18 @@ section {
     radial-gradient(24% 34% at 88% 60%, rgba(61, 69, 82, 0.28), transparent 70%);
 }
 
+.ab-ambient img {
+  position: absolute;
+  left: 50%;
+  top: 10%;
+  width: min(60%, 520px);
+  aspect-ratio: 1;
+  object-fit: cover;
+  transform: translateX(-50%);
+  filter: blur(70px) saturate(140%);
+  opacity: 0.45;
+}
+
 .ab-pair {
   display: none;
 }

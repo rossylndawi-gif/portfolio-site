@@ -274,24 +274,6 @@ if (hasGsap) {
         });
       }
     }
-
-    // --- Scroll feel: sections lean very slightly with scroll speed and
-    // settle back when the page stops (the hero is pinned, so it is left out). ---
-    const leaners = Array.from(document.querySelectorAll('main > section:not(.hero)'));
-    if (leaners.length) {
-      const skewTo = leaners.map(el => gsap.quickTo(el, 'skewY', { duration: 0.6, ease: 'power3.out' }));
-      ScrollTrigger.create({
-        onUpdate: (self) => {
-          const skew = gsap.utils.clamp(-2.2, 2.2, self.getVelocity() / -450);
-          skewTo.forEach(fn => fn(skew));
-        }
-      });
-      let settle = 0;
-      window.addEventListener('scroll', () => {
-        clearTimeout(settle);
-        settle = setTimeout(() => skewTo.forEach(fn => fn(0)), 120);
-      }, { passive: true });
-    }
   });
 }
 
@@ -1251,6 +1233,7 @@ if (abEl) {
   const visual = abEl.querySelector('.ab-visual');
   const timeTag = abEl.querySelector('.ab-time');
   const captionTitle = abEl.querySelector('.ab-caption-title');
+  const abAmbient = abEl.querySelector('.ab-ambient');
   const opts = Array.from(abEl.querySelectorAll('.ab-opt'));
   const note = abEl.querySelector('[data-ab-status]');
 
@@ -1491,6 +1474,17 @@ if (abEl) {
     }
     if (focus) st.tab.focus();
     if (captionTitle) captionTitle.textContent = st.title;
+    // The pair's cover, if any, tints the glow behind the glass.
+    if (abAmbient) {
+      abAmbient.querySelector('img')?.remove();
+      if (st.el.dataset.cover) {
+        const img = new Image();
+        img.alt = '';
+        img.decoding = 'async';
+        img.src = st.el.dataset.cover;
+        abAmbient.appendChild(img);
+      }
+    }
     positionInk();
     renderControls();
   };
