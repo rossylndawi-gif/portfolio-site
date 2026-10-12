@@ -1088,20 +1088,46 @@ if (playerEl) {
     let drag = 0;
     let swallowClick = false;
 
+    // Move `count` cards in one go: only the card we land on is loaded, so a
+    // multi-card swipe doesn't fetch audio and swap covers for every card it passes.
+    const jump = (count) => {
+      if (browsing()) {
+        view = wrap(view + count);
+        positionCards();
+        return;
+      }
+      const dir = Math.sign(count);
+      let j = index;
+      for (let k = 0; k < Math.abs(count); k++) {
+        const next = availableFrom(j, dir);
+        if (next === -1) break;
+        j = next;
+      }
+      if (j === index) { positionCards(); return; }
+      const wasPlaying = !audio.paused;
+      load(j);
+      if (wasPlaying) play();
+    };
+
+    // A flick adds at most one extra card, so a quick swipe on a phone moves
+    // one or two cards instead of flying past half the playlist.
     const settle = (velocity = 0) => {
       playlistEl.classList.remove('is-dragging');
-      let count = Math.round(drag + velocity * 0.25);
+      const fling = Math.max(-1, Math.min(1, velocity * 0.25));
+      let count = Math.round(drag + fling);
       count = Math.max(-(n - 1), Math.min(n - 1, count));
       drag = 0;
       if (count === 0) { positionCards(); return; }
-      const dir = Math.sign(count);
-      for (let k = 0; k < Math.abs(count); k++) step(dir);
+      jump(count);
     };
 
+    // Pointer events can fire faster than the screen refreshes; lay the
+    // cards out at most once per frame.
+    let frame = 0;
     const follow = (value) => {
       drag = Math.max(-(n - 1), Math.min(n - 1, value));
       playlistEl.classList.add('is-dragging');
-      positionCards(drag);
+      if (!frame) frame = requestAnimationFrame(() => { frame = 0; if (drag) positionCards(drag); });
     };
 
     let wheelTimer = 0;
@@ -1130,7 +1156,9 @@ if (playerEl) {
       }
       const now = performance.now();
       const dt = Math.max(1, now - swipe.lastT);
-      swipe.v = (-(e.clientX - swipe.lastX) / spacing()) / dt * 1000;   // cards per second
+      // Cards per second, smoothed: a single jittery touch sample shouldn't decide the fling.
+      const v = (-(e.clientX - swipe.lastX) / spacing()) / dt * 1000;
+      swipe.v = swipe.v * 0.6 + v * 0.4;
       swipe.lastX = e.clientX;
       swipe.lastT = now;
       follow(-dx / spacing());
@@ -1214,11 +1242,15 @@ if (playerEl) {
 // Each pair plays the raw and final files together, in sync. Only one is
 // audible; the A/B toggle flips .muted, so switching is instant and never
 // restarts the track. Raw is the master clock; the final file is snapped
-// back whenever it drifts more than 50ms.
+// back when it drifts more than 150ms, at most once a second. Phones seek
+// slowly and report time coarsely, so a tighter or more frequent snap keeps
+// the final file permanently mid-seek (silent).
 // ============================================
 const abEl = document.querySelector('[data-ab]');
 if (abEl) {
-  const DRIFT = 0.05;
+  const DRIFT = 0.15;
+  const RESYNC_GAP = 1000;
+  let lastResync = 0;
   const BAR_COUNT = 64;
 
   const pairs = Array.from(abEl.querySelectorAll('.ab-pair'));
@@ -1358,9 +1390,12 @@ if (abEl) {
       return;
     }
     const { raw, fin } = st;
+    const now = performance.now();
     if (!raw.seeking && !fin.seeking && !raw.paused && !fin.paused &&
+      now - lastResync > RESYNC_GAP &&
       Math.abs(raw.currentTime - fin.currentTime) > DRIFT) {
       fin.currentTime = raw.currentTime;
+      lastResync = now;
     }
     updateTimes(st);
     rafId = requestAnimationFrame(tick);
@@ -1389,6 +1424,9 @@ if (abEl) {
     if (!st || st.ok !== true) return;
     AudioBus.claim(ctrl);
     st.wantPlay = true;
+    // Full download only once someone actually listens (only headers on page load).
+    st.raw.preload = 'auto';
+    st.fin.preload = 'auto';
     if (Math.abs(st.raw.currentTime - st.fin.currentTime) > DRIFT) st.fin.currentTime = st.raw.currentTime;
     setPlayingUI(true);
     Promise.all([st.raw.play(), st.fin.play()])
@@ -1468,10 +1506,6 @@ if (abEl) {
       s.tab.setAttribute('aria-selected', String(on));
       s.tab.tabIndex = on ? 0 : -1;
     });
-    if (st.raw) {
-      st.raw.preload = 'auto';
-      st.fin.preload = 'auto';
-    }
     if (focus) st.tab.focus();
     if (captionTitle) captionTitle.textContent = st.title;
     // The pair's cover, if any, tints the glow behind the glass.
@@ -1564,6 +1598,11 @@ if (abEl) {
     if (o.dataset.side === side) return;
     side = o.dataset.side;
     applySide();
+    // Mobile browsers sometimes pause the muted file; restart whichever stopped.
+    if (active && active.wantPlay) {
+      if (active.raw.paused) active.raw.play().catch(() => { });
+      if (active.fin.paused) active.fin.play().catch(() => { });
+    }
     if (active) updateTimeTag(active);
     sweep(side === 'final');
   }));

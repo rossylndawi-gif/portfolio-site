@@ -3188,6 +3188,16 @@ html::after {
   100% { opacity: 0.6; }
 }
 
+/* Phones: two full-screen layers twinkling forever cost a repaint while
+   scrolling; keep the stars, hold them still. */
+@media (max-width: 768px) {
+  html::before,
+  html::after {
+    animation: none;
+    opacity: 0.75;
+  }
+}
+
 /* Canvas particles from script.js now layer on top of the CSS stars */
 #starfield {
   opacity: 0.9;
