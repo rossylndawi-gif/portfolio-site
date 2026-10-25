@@ -1552,6 +1552,10 @@ section {
   inset: -2rem 0 -1rem;
   z-index: -1;
   pointer-events: none;
+  /* Fade the glow out before the edges so it never shows as a hard-edged
+     box where the player clips it (iOS Safari clips both axes). */
+  -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent);
+  mask-image: radial-gradient(closest-side, #000 55%, transparent);
   background:
     radial-gradient(38% 48% at 50% 38%, rgba(95, 107, 124, 0.30), transparent 70%),
     radial-gradient(26% 36% at 22% 62%, rgba(163, 173, 187, 0.10), transparent 70%),
@@ -1617,10 +1621,13 @@ section {
   flex: 0 0 var(--card-w);
   margin-right: calc(var(--card-w) * -0.38);
   scroll-snap-align: center;
-  /* Neighbours turn away from the centre and recede. */
+  /* Neighbours turn away from the centre and recede. The push back in Z
+     keeps a turned card's near edge behind the centre card: Safari sorts
+     3D-transformed cards by depth and ignores the z-index set in script.js. */
   transform:
+    translateZ(calc(var(--abs) * -160px))
     rotateY(calc(var(--offset) * 24deg))
-    scale(calc(1 - var(--abs) * 0.12));
+    scale(calc(1 - var(--abs) * 0.03));
   opacity: calc(1 - var(--abs) * 0.3);
   will-change: transform;
 }
